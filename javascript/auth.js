@@ -16,8 +16,14 @@ const urlHalaman = (route) => new URL(route, APP_ROOT).href;
 const ROLE_PENDAFTARAN = ['customer', 'sopir']; // admin TIDAK bisa daftar sendiri
 
 /* ---------- Pesan error (bahasa Indonesia) ---------- */
+const PESAN_BELUM_SIAP = 'Layanan belum siap: konfigurasi Supabase belum diisi atau gagal dimuat. Lihat Console browser (F12).';
+
 function pesanError(error) {
   const msg = (error && error.message) || '';
+  const kode = (error && error.code) || '';
+  if (kode === 'PGRST205' || /schema cache|does not exist/i.test(msg)) return 'Tabel database belum dibuat. Jalankan api/schema.sql di Supabase.';
+  if (kode === 'PGRST116') return 'Profil akun tidak ditemukan. Pastikan trigger di api/schema.sql sudah dijalankan.';
+  if (/invalid api key|apikey/i.test(msg)) return 'Kunci Supabase tidak valid. Periksa javascript/supabase-config.js.';
   if (/invalid login credentials/i.test(msg)) return 'Email atau kata sandi salah.';
   if (/email not confirmed/i.test(msg)) return 'Email belum dikonfirmasi. Cek kotak masuk Anda.';
   if (/already registered|already been registered/i.test(msg)) return 'Email sudah terdaftar.';
@@ -39,6 +45,7 @@ async function getProfile(userId) {
 }
 
 async function getCurrentProfile() {
+  if (!supabaseClient) return null;
   const { data: { session } } = await supabaseClient.auth.getSession();
   return session ? getProfile(session.user.id) : null;
 }
@@ -54,6 +61,7 @@ function redirectByRole(profile) {
 
 /* ---------- Registrasi, login, logout ---------- */
 async function registerUser({ nama, noHp, email, password, role }) {
+  if (!supabaseClient) return { ok: false, message: PESAN_BELUM_SIAP };
   if (!ROLE_PENDAFTARAN.includes(role)) return { ok: false, message: 'Peran tidak valid.' };
 
   const { data, error } = await supabaseClient.auth.signUp({
@@ -75,13 +83,14 @@ async function registerUser({ nama, noHp, email, password, role }) {
 }
 
 async function loginUser(email, password) {
+  if (!supabaseClient) return { ok: false, message: PESAN_BELUM_SIAP };
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) return { ok: false, message: pesanError(error) };
   return { ok: true, profile: await getProfile(data.user.id) };
 }
 
 async function logoutUser() {
-  await supabaseClient.auth.signOut();
+  if (supabaseClient) await supabaseClient.auth.signOut();
   window.location.href = urlHalaman(ROUTES.home);
 }
 
