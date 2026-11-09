@@ -6,8 +6,8 @@
    PENTING untuk Vercel: ini situs statis, jadi "Environment Variables" Vercel TIDAK ikut masuk ke file ini.
    Nilai harus ditulis langsung di sini (kunci anon memang aman dipublikasikan; keamanan ada di RLS). */
 
-const SUPABASE_URL = 'https://GANTI-DENGAN-ID-PROYEK.supabase.co';
-const SUPABASE_ANON_KEY = 'GANTI-DENGAN-ANON-ATAU-PUBLISHABLE-KEY';
+const SUPABASE_URL = 'https://elygwmsgfrvbikhhtxcx.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2x1uPXK4hVaSxXScS0W0pA_zWblng8u';
 
 const belumDiisi = /GANTI/.test(SUPABASE_URL + SUPABASE_ANON_KEY);
 const libMuat = !!(window.supabase && window.supabase.createClient);
