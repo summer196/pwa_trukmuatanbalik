@@ -1,0 +1,64 @@
+/* auth.css - modal masuk/daftar. Dimuat setelah style.css (memakai variabel warnanya). */
+
+.auth {
+  width: min(440px, calc(100% - 24px));
+  max-height: calc(100dvh - 24px);
+  margin: auto; padding: 0; border: 0; overflow: auto;
+  border-radius: var(--radius-lg);
+  background: var(--white); color: var(--ink);
+  box-shadow: var(--shadow);
+}
+.auth::backdrop { background: rgba(7, 34, 79, .6); }
+body:has(.auth[open]) { overflow: hidden; }
+
+.auth__box { position: relative; padding: 16px 18px 22px; }
+.auth__close {
+  position: absolute; top: 6px; right: 6px;
+  width: 44px; height: 44px; border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: var(--muted);
+  font-size: 1.75rem; line-height: 1; cursor: pointer;
+}
+.auth__close:hover { background: var(--blue-50); }
+
+.auth__tabs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+  margin: 40px 0 16px; padding: 4px;
+  background: var(--blue-50); border-radius: var(--radius-sm);
+}
+.auth__tabs button {
+  min-height: 44px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--muted);
+  font: inherit; font-weight: 700; cursor: pointer;
+}
+.auth__tabs button[aria-selected="true"] {
+  background: var(--white); color: var(--blue-800);
+  box-shadow: 0 1px 4px rgba(7, 34, 79, .15);
+}
+
+.auth__form { display: grid; gap: 12px; }
+.auth__form[hidden] { display: none; }
+
+.auth__field { display: grid; gap: 6px; font-weight: 700; font-size: .95rem; }
+.auth__field input {
+  min-height: 50px; padding: 0 14px;
+  border: 2px solid var(--line); border-radius: var(--radius-sm);
+  font: inherit; font-weight: 400; color: var(--ink); background: var(--white);
+}
+.auth__field input:focus { outline: none; border-color: var(--blue-600); box-shadow: 0 0 0 3px var(--blue-100); }
+
+.auth__roles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; padding: 0; border: 0; }
+.auth__roles legend { padding: 0; margin-bottom: 6px; font-weight: 700; font-size: .95rem; }
+.auth__role { position: relative; }
+.auth__role input { position: absolute; opacity: 0; }
+.auth__role span {
+  display: block; padding: 12px 8px; text-align: center; cursor: pointer;
+  border: 2px solid var(--line); border-radius: var(--radius-sm); font-weight: 700;
+}
+.auth__role input:checked + span { border-color: var(--blue-600); background: var(--blue-50); color: var(--blue-800); }
+.auth__role input:focus-visible + span { outline: 3px solid var(--blue-500); outline-offset: 2px; }
+
+.auth__hint { margin: 0; font-size: .85rem; color: var(--muted); }
+.auth__msg { min-height: 1.4em; margin: 0; font-size: .95rem; }
+.auth__msg[data-type="error"] { color: #b42318; }
+.auth__msg[data-type="ok"] { color: #067647; }
+.auth .btn[disabled] { opacity: .7; cursor: wait; }

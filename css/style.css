@@ -1,5 +1,5 @@
 /* =========================================================
-   Muatan Balik – Landing page
+   Muatanku – Landing page
    Mobile-first. Biru + putih. Font: Calibri / sans-serif.
    ========================================================= */
 
@@ -92,16 +92,8 @@ input, button { font: inherit; }
   min-height: var(--nav-h);
 }
 
-.brand { display: inline-flex; align-items: center; gap: 10px; }
-.brand__logo {
-  display: grid; place-items: center;
-  width: 38px; height: 38px;
-  background: var(--blue-600); color: var(--white);
-  border-radius: 10px;
-}
-.brand__name { font-size: 1.25rem; font-weight: 700; color: var(--blue-800); letter-spacing: -.01em; }
-.brand--light .brand__name { color: var(--white); }
-.brand--light .brand__logo { background: var(--white); color: var(--blue-800); }
+.brand { display: inline-flex; align-items: center; min-height: 48px; }
+.brand__img { display: block; height: 34px; width: auto; }
 
 /* Menu mobile tanpa JavaScript (checkbox) */
 .menu-toggle { position: absolute; opacity: 0; pointer-events: none; }
@@ -286,6 +278,7 @@ input, button { font: inherit; }
    ========================================================= */
 @media (min-width: 960px) {
   :root { --nav-h: 68px; }
+  .brand__img { height: 38px; }
 
   .menu-btn, .menu-toggle { display: none; }
   .nav {

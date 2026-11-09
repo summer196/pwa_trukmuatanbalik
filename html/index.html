@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Muatan Balik – Cari Muatan untuk Truk Kelas Berat</title>
+  <title>Muatanku – Cari Muatan untuk Truk Kelas Berat</title>
   <meta name="description" content="Aplikasi pencarian muatan balik untuk truk kelas berat dengan validasi kecocokan muatan dan armada.">
   <meta name="theme-color" content="#0b3d91">
+  <link rel="icon" type="image/svg+xml" href="../img/logo-icon.svg">
   <!-- Langkah PWA nanti: <link rel="manifest" href="manifest.json"> -->
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/auth.css">
 </head>
 <body>
 
@@ -30,9 +32,8 @@
   <!-- ===== NAVBAR ===== -->
   <header class="navbar">
     <div class="container navbar__inner">
-      <a href="#beranda" class="brand" aria-label="Muatan Balik – beranda">
-        <span class="brand__logo"><svg class="icon"><use href="#i-truck"/></svg></span>
-        <span class="brand__name">Muatan Balik</span>
+      <a href="#beranda" class="brand" aria-label="Muatanku – beranda">
+        <img src="../img/logo-horizontal.svg" alt="" class="brand__img" width="197" height="36">
       </a>
 
       <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Buka menu">
@@ -42,8 +43,8 @@
         <a href="#beranda">Beranda</a>
         <a href="#fitur">Fitur</a>
         <a href="#kontak">Kontak</a>
-        <a href="#" class="btn btn--ghost">Masuk</a>
-        <a href="#" class="btn btn--primary">Daftar</a>
+        <a href="#" class="btn btn--ghost" data-auth-open="login">Masuk</a>
+        <a href="#" class="btn btn--primary" data-auth-open="register">Daftar</a>
       </nav>
     </div>
   </header>
@@ -158,7 +159,7 @@
           <h2>Siap cari muatan untuk perjalanan pulang?</h2>
           <p>Daftar sebagai sopir atau customer dan mulai dalam beberapa menit.</p>
         </div>
-        <a href="#" class="btn btn--light">Daftar Sekarang</a>
+        <a href="#" class="btn btn--light" data-auth-open="register">Daftar Sekarang</a>
       </div>
     </section>
   </main>
@@ -167,9 +168,8 @@
   <footer class="footer" id="kontak">
     <div class="container footer__inner">
       <div class="footer__brand">
-        <a href="#beranda" class="brand brand--light">
-          <span class="brand__logo"><svg class="icon"><use href="#i-truck"/></svg></span>
-          <span class="brand__name">Muatan Balik</span>
+        <a href="#beranda" class="brand" aria-label="Muatanku – beranda">
+          <img src="../img/logo-horizontal-white.svg" alt="" class="brand__img" width="197" height="36">
         </a>
         <p>Pencarian muatan balik untuk truk kelas berat.</p>
       </div>
@@ -178,8 +178,8 @@
         <h4>Menu</h4>
         <a href="#beranda">Beranda</a>
         <a href="#fitur">Fitur</a>
-        <a href="#">Masuk</a>
-        <a href="#">Daftar</a>
+        <a href="#" data-auth-open="login">Masuk</a>
+        <a href="#" data-auth-open="register">Daftar</a>
       </nav>
 
       <div class="footer__col">
@@ -190,10 +190,61 @@
     </div>
     <div class="footer__bottom">
       <div class="container">
-        <small>&copy; 2026 Muatan Balik. Proyek mata kuliah Konstruksi dan Rekayasa Perangkat Lunak.</small>
+        <small>&copy; 2026 Muatanku. Proyek mata kuliah Konstruksi dan Rekayasa Perangkat Lunak.</small>
       </div>
     </div>
   </footer>
+
+  <!-- ===== MODAL MASUK / DAFTAR ===== -->
+  <dialog id="auth-modal" class="auth" aria-label="Masuk atau daftar">
+    <div class="auth__box">
+      <button type="button" class="auth__close" data-auth-close aria-label="Tutup">&times;</button>
+
+      <div class="auth__tabs" role="tablist">
+        <button type="button" role="tab" data-auth-tab="login" aria-selected="true">Masuk</button>
+        <button type="button" role="tab" data-auth-tab="register" aria-selected="false">Daftar</button>
+      </div>
+
+      <form id="form-login" class="auth__form">
+        <label class="auth__field">Email
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <label class="auth__field">Kata sandi
+          <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+        <p class="auth__msg" role="alert"></p>
+        <button type="submit" class="btn btn--primary btn--block">Masuk</button>
+      </form>
+
+      <form id="form-register" class="auth__form" hidden>
+        <fieldset class="auth__roles">
+          <legend>Daftar sebagai</legend>
+          <label class="auth__role"><input type="radio" name="role" value="sopir" checked><span>Sopir</span></label>
+          <label class="auth__role"><input type="radio" name="role" value="customer"><span>Customer</span></label>
+        </fieldset>
+        <label class="auth__field">Nama lengkap
+          <input type="text" name="nama" autocomplete="name" required>
+        </label>
+        <label class="auth__field">Nomor HP
+          <input type="tel" name="no_hp" autocomplete="tel" inputmode="tel" placeholder="08123456789"
+                 pattern="^(\+62|62|0)8[0-9]{8,12}$" title="Contoh: 08123456789" required>
+        </label>
+        <label class="auth__field">Email
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <label class="auth__field">Kata sandi
+          <input type="password" name="password" autocomplete="new-password" minlength="8" required>
+        </label>
+        <p class="auth__hint">Akun sopir akan diperiksa admin sebelum bisa dipakai mencari muatan.</p>
+        <p class="auth__msg" role="alert"></p>
+        <button type="submit" class="btn btn--primary btn--block">Buat Akun</button>
+      </form>
+    </div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="../javascript/supabase-config.js"></script>
+  <script src="../javascript/auth.js"></script>
 
 </body>
 </html>
