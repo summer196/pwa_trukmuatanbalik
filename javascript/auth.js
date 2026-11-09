@@ -5,10 +5,9 @@
 /* ---------- Konfigurasi ---------- */
 const ROUTES = {
   home: 'index.html',
-  customer: 'customer.html',
-  sopir: 'sopir.html',
+  customer: 'dashboard.html',
+  sopir: 'dashboard.html',   // sopir yang belum diverifikasi juga ke sini (untuk melengkapi profil armada)
   admin: 'admin.html',
-  sopirMenunggu: 'menunggu-verifikasi.html',
 };
 const ROLE_PENDAFTARAN = ['customer', 'sopir']; // admin TIDAK bisa daftar sendiri
 
@@ -40,13 +39,9 @@ async function getCurrentProfile() {
   return session ? getProfile(session.user.id) : null;
 }
 
-/* Tentukan halaman tujuan berdasarkan peran dan status verifikasi */
+/* Tentukan halaman tujuan berdasarkan peran */
 function routeFor(profile) {
-  if (profile.role === 'admin') return ROUTES.admin;
-  if (profile.role === 'sopir') {
-    return profile.status_verifikasi === 'verified' ? ROUTES.sopir : ROUTES.sopirMenunggu;
-  }
-  return ROUTES.customer;
+  return ROUTES[profile.role] || ROUTES.home;
 }
 
 function redirectByRole(profile) {
@@ -87,20 +82,17 @@ async function logoutUser() {
 }
 
 /* ---------- Penjaga halaman ----------
-   Panggil di awal halaman dashboard, contoh di sopir.html:
-     const profile = await requireRole(['sopir']);
+   Panggil di awal halaman dashboard, contoh:
+     const profile = await requireRole(['customer', 'sopir']);
      if (!profile) return;
-   Ini hanya pengaman tampilan. Keamanan data sebenarnya ada di RLS database. */
-async function requireRole(allowedRoles, { allowUnverifiedSopir = false } = {}) {
+   Ini hanya pengaman tampilan. Keamanan data sebenarnya ada di RLS database.
+   Fitur yang butuh sopir terverifikasi (misalnya cari muatan) memeriksa status_verifikasi sendiri. */
+async function requireRole(allowedRoles) {
   let profile = null;
   try { profile = await getCurrentProfile(); } catch (e) { console.error(e); }
 
   if (!profile) { window.location.replace(ROUTES.home); return null; }
   if (!allowedRoles.includes(profile.role)) { window.location.replace(routeFor(profile)); return null; }
-  if (profile.role === 'sopir' && profile.status_verifikasi !== 'verified' && !allowUnverifiedSopir) {
-    window.location.replace(ROUTES.sopirMenunggu);
-    return null;
-  }
   return profile;
 }
 
