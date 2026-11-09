@@ -9,7 +9,7 @@
    - Tile peta OpenStreetMap                   : "cache dulu", dibatasi jumlahnya.
    - Auth, realtime, pencarian lokasi, dan semua request non-GET : tidak disentuh (langsung ke jaringan). */
 
-const VERSI = 'v3';
+const VERSI = 'v4';
 const CACHE_SHELL = `muatanku-shell-${VERSI}`;
 const CACHE_ASET = `muatanku-aset-${VERSI}`;
 const CACHE_API = `muatanku-api-${VERSI}`;

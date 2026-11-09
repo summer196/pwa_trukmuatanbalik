@@ -77,6 +77,7 @@ input, button { font: inherit; }
 .btn--light { background: var(--white); color: var(--blue-800); }
 .btn--light:hover { background: var(--blue-100); }
 .btn--block { width: 100%; }
+.btn[hidden] { display: none; }
 
 /* =========================================================
    NAVBAR
