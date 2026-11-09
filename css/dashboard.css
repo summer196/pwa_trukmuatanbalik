@@ -65,3 +65,9 @@
 .dash-actions:empty { display: none; }
 .dash-unit { display: grid; gap: 4px; padding: 12px; background: var(--blue-50); border-radius: var(--radius-sm); }
 .dash-item .dash-unit .dash-btn-sm, .dash-item .dash-actions .dash-btn-sm { margin-top: 0; }
+
+/* Peta (Leaflet) */
+.peta { height: 340px; border: 1px solid var(--line); border-radius: var(--radius); isolation: isolate; }  /* tinggi WAJIB; isolate menjaga z-index Leaflet di dalam peta */
+.peta-popup { display: grid; gap: 4px; min-width: 190px; font-family: var(--font); }
+.peta-popup__alasan { color: #b42318; font-size: .9rem; }
+@media (min-width: 960px) { .peta { height: 460px; } }

@@ -313,3 +313,12 @@ input, button { font: inherit; }
   html { scroll-behavior: auto; }
   * { transition: none !important; }
 }
+
+/* Penanda offline (javascript/pwa.js) */
+.offline-bar {
+  position: sticky; top: 0; z-index: 60;
+  padding: 8px var(--gutter); padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  background: #fff1c9; color: #7a5600; border-bottom: 1px solid #f0d58a;
+  text-align: center; font-weight: 700; font-size: .95rem;
+}
+.offline-bar[hidden] { display: none; }

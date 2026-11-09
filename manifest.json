@@ -1,0 +1,29 @@
+{
+  "id": "./",
+  "name": "Muatanku - Cari Muatan Balik Truk Kelas Berat",
+  "short_name": "Muatanku",
+  "description": "Cari muatan balik untuk truk kelas berat, lengkap dengan pengecekan kecocokan muatan dan armada.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#0b3d91",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "img/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "img/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dasbor",
+      "short_name": "Dasbor",
+      "description": "Buka dasbor sopir atau customer",
+      "url": "html/dashboard.html",
+      "icons": [{ "src": "img/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

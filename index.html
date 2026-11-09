@@ -7,7 +7,8 @@
   <meta name="description" content="Aplikasi pencarian muatan balik untuk truk kelas berat dengan validasi kecocokan muatan dan armada.">
   <meta name="theme-color" content="#0b3d91">
   <link rel="icon" type="image/svg+xml" href="img/logo-icon.svg">
-  <!-- Langkah PWA nanti: <link rel="manifest" href="manifest.json"> -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="css/auth.css">
 </head>
@@ -180,6 +181,7 @@
         <a href="#fitur">Fitur</a>
         <a href="#" data-auth-open="login">Masuk</a>
         <a href="#" data-auth-open="register">Daftar</a>
+        <a href="#" data-pwa-install hidden>Pasang aplikasi</a>
       </nav>
 
       <div class="footer__col">
@@ -245,6 +247,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js"></script>
   <script src="javascript/supabase-config.js"></script>
   <script src="javascript/auth.js"></script>
+  <script src="javascript/pwa.js" defer></script>
 
 </body>
 </html>
