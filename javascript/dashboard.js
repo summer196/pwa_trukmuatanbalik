@@ -104,4 +104,5 @@ async function initDashboard() {
   else mountCustomerDashboard(root, profile);
 }
 
-document.addEventListener('DOMContentLoaded', initDashboard);
+// Bootstrap hanya untuk dasbor customer/sopir; halaman lain (admin.html) hanya memakai helper di atas
+if (document.body.dataset.halaman === 'dasbor') document.addEventListener('DOMContentLoaded', initDashboard);

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Admin – Muatanku</title>
+  <meta name="theme-color" content="#0b3d91">
+  <link rel="icon" type="image/svg+xml" href="../img/logo-icon.svg">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body class="dash" data-halaman="admin">
+
+  <header class="dash-top">
+    <div class="container dash-top__inner">
+      <a href="../index.html" class="brand" aria-label="Muatanku – beranda">
+        <img src="../img/logo-horizontal.svg" alt="" class="brand__img" width="197" height="36">
+      </a>
+      <div class="dash-user">
+        <span id="user-name" class="dash-user__name"></span>
+        <span id="user-role" class="dash-badge"></span>
+        <button type="button" id="btn-logout" class="btn btn--ghost dash-btn-sm">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container dash-main">
+    <h1 id="dash-title">Memuat...</h1>
+    <!-- Daftar sopir dan tombol verifikasi dibuat lewat DOM oleh admin-dashboard.js -->
+    <div id="app"></div>
+    <noscript><p>Aplikasi ini membutuhkan JavaScript.</p></noscript>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js"></script>
+  <script src="../javascript/supabase-config.js"></script>
+  <script src="../javascript/auth.js"></script>
+  <script src="../javascript/dashboard.js"></script>
+  <script src="../javascript/admin-dashboard.js"></script>
+</body>
+</html>
