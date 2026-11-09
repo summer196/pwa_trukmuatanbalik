@@ -62,15 +62,61 @@ function redirectByRole(profile) {
 async function updateLandingNavigation() {
   const nav = document.querySelector('.nav');
   const dashboardLink = nav && nav.querySelector('[data-auth-dashboard]');
-  if (!nav || !dashboardLink || !supabaseClient) return;
+  const profileEl = document.getElementById('nav-profile');
+  if (!nav || !supabaseClient) return;
 
   try {
     const profile = await getCurrentProfile();
     if (!profile) return;
 
-    dashboardLink.href = urlHalaman(routeFor(profile));
-    dashboardLink.hidden = false;
+    // Sembunyikan tombol Masuk & Daftar
     nav.querySelectorAll('[data-auth-open]').forEach((link) => { link.hidden = true; });
+
+    // Sembunyikan tombol Dashboard lama (digantikan profil)
+    if (dashboardLink) dashboardLink.hidden = true;
+
+    // Tampilkan panel profil
+    if (profileEl) {
+      profileEl.hidden = false;
+
+      const nameEl = profileEl.querySelector('[data-profile-name]');
+      const emailEl = profileEl.querySelector('[data-profile-email]');
+      const roleEl = profileEl.querySelector('[data-profile-role]');
+      const dashLink = profileEl.querySelector('[data-auth-dashboard-link]');
+
+      if (nameEl) nameEl.textContent = profile.nama || 'Pengguna';
+      if (roleEl) {
+        const roleLabels = { sopir: 'Sopir', customer: 'Customer', admin: 'Admin' };
+        roleEl.textContent = roleLabels[profile.role] || profile.role;
+        roleEl.dataset.role = profile.role;
+      }
+      if (dashLink) dashLink.href = urlHalaman(routeFor(profile));
+
+      // Ambil email dari sesi
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (emailEl && session) emailEl.textContent = session.user.email;
+
+      // Toggle dropdown
+      const toggle = profileEl.querySelector('.nav-profile__toggle');
+      const dropdown = profileEl.querySelector('.nav-profile__dropdown');
+      if (toggle && dropdown) {
+        toggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const open = toggle.getAttribute('aria-expanded') === 'true';
+          toggle.setAttribute('aria-expanded', String(!open));
+          dropdown.classList.toggle('nav-profile__dropdown--open', !open);
+        });
+        document.addEventListener('click', () => {
+          toggle.setAttribute('aria-expanded', 'false');
+          dropdown.classList.remove('nav-profile__dropdown--open');
+        });
+        profileEl.addEventListener('click', (e) => e.stopPropagation());
+      }
+
+      // Tombol logout
+      const logoutBtn = profileEl.querySelector('[data-auth-logout]');
+      if (logoutBtn) logoutBtn.addEventListener('click', () => logoutUser());
+    }
   } catch (error) {
     console.error('[Muatanku] Gagal memuat sesi untuk navigasi:', error);
   }

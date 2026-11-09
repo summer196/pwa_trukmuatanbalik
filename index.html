@@ -47,6 +47,31 @@
         <a href="#" class="btn btn--ghost" data-auth-open="login">Masuk</a>
         <a href="#" class="btn btn--primary" data-auth-open="register">Daftar</a>
         <a href="#" class="btn btn--primary" data-auth-dashboard hidden>Dashboard</a>
+
+        <!-- Profil (tampil setelah login, tersembunyi awalnya) -->
+        <div class="nav-profile" id="nav-profile" hidden>
+          <button type="button" class="nav-profile__toggle" aria-expanded="false" aria-haspopup="true">
+            <span class="nav-profile__avatar" aria-hidden="true">
+              <svg class="icon"><use href="#i-user"/></svg>
+            </span>
+            <span class="nav-profile__name" data-profile-name>Pengguna</span>
+            <svg class="nav-profile__caret" viewBox="0 0 12 8" width="12" height="8" aria-hidden="true"><path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="nav-profile__dropdown">
+            <div class="nav-profile__info">
+              <span class="nav-profile__role-badge" data-profile-role></span>
+              <span class="nav-profile__email" data-profile-email></span>
+            </div>
+            <a href="#" class="nav-profile__item" data-auth-dashboard-link>
+              <svg class="icon"><use href="#i-box"/></svg>
+              Dashboard
+            </a>
+            <button type="button" class="nav-profile__item nav-profile__item--logout" data-auth-logout>
+              <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Keluar
+            </button>
+          </div>
+        </div>
       </nav>
     </div>
   </header>
