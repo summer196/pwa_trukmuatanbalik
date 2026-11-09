@@ -86,3 +86,77 @@
 .dash-step { padding: 3px 10px; border-radius: 999px; font-size: .8rem; background: var(--blue-50); color: var(--muted); }
 .dash-step--on { background: var(--blue-600); color: var(--white); font-weight: 700; }
 .dash-item a { color: var(--blue-800); font-weight: 700; }
+
+/* =========================================================
+   ADMIN DASHBOARD EXTENSIONS (TANPA EMOJI)
+   ========================================================= */
+.admin-main-nav {
+  margin-bottom: 20px;
+  background: var(--blue-50);
+  border: 1px solid var(--line);
+  padding: 6px;
+}
+.admin-main-nav button {
+  min-height: 46px;
+  font-size: .95rem;
+}
+.admin-content-card {
+  padding: 20px;
+}
+
+.admin-search-box {
+  margin-bottom: 14px;
+}
+.admin-search-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: .95rem;
+}
+.admin-search-input:focus {
+  outline: none;
+  border-color: var(--blue-600);
+  box-shadow: 0 0 0 3px var(--blue-100);
+}
+
+.admin-status-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--blue-50);
+  border-radius: var(--radius-sm);
+}
+
+.admin-dialog-tracking {
+  width: min(540px, calc(100% - 24px));
+}
+
+.admin-timeline {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+  padding-left: 12px;
+  border-left: 2px solid var(--line);
+}
+.admin-timeline__item {
+  position: relative;
+  padding-left: 16px;
+  font-size: .92rem;
+}
+.admin-timeline__item::before {
+  content: "";
+  position: absolute;
+  left: -21px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--blue-600);
+}
+

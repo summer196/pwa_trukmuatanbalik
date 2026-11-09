@@ -124,7 +124,7 @@ const MapUI = (() => {
     if (namaAwal) searchInput.value = namaAwal;
     const searchBtn = buat('button', 'Cari', 'btn btn--ghost dash-btn-sm');
     searchBtn.type = 'button';
-    const gpsBtn = buat('button', '📍 Lokasi Saya', 'btn btn--ghost dash-btn-sm');
+    const gpsBtn = buat('button', 'Lokasi Saya', 'btn btn--ghost dash-btn-sm');
     gpsBtn.type = 'button';
     searchBar.append(searchInput, searchBtn, gpsBtn);
 

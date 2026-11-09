@@ -60,7 +60,7 @@ function lokasiField(prefix, label) {
   const lon = input(`${prefix}_lon`, 'hidden');
   const info = el('small', { class: 'dash-hint', 'aria-live': 'polite' }, petunjuk);
   const cari = el('button', { type: 'button', class: 'btn btn--ghost dash-btn-sm' }, 'Cari titik');
-  const pilihPeta = el('button', { type: 'button', class: 'btn btn--ghost dash-btn-sm', title: 'Pilih titik langsung di peta untuk lokasi presisi' }, '🗺️ Pilih di Peta');
+  const pilihPeta = el('button', { type: 'button', class: 'btn btn--ghost dash-btn-sm', title: 'Pilih titik langsung di peta untuk lokasi presisi' }, 'Pilih di Peta');
 
   nama.addEventListener('input', () => { lat.value = ''; lon.value = ''; info.textContent = petunjuk; delete info.dataset.ok; });
   cari.addEventListener('click', async () => {

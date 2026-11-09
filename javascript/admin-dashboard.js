@@ -1,15 +1,32 @@
-/* admin-dashboard.js - verifikasi akun sopir dan armadanya. Khusus peran admin.
-   Bergantung pada: supabase-config.js, auth.js, dashboard.js (helper el, badge, setMsg, pesanDb, tanggal) */
+/* admin-dashboard.js
+   Controller utama dasbor admin. Mengatur navigasi antar modul:
+   1. Verifikasi Sopir (admin-verifikasi.js)
+   2. Pelacakan Paket (admin-pengiriman.js)
+   3. Data Customer (admin-customer.js)
+   Bergantung pada: supabase-config.js, auth.js, dashboard.js */
 
-const STATUS_VERIF = {
-  pending: ['Menunggu', 'wait'],
-  verified: ['Terverifikasi', 'ok'],
-  rejected: ['Ditolak', 'no'],
+const MENU_ADMIN = {
+  verifikasi: {
+    label: 'Verifikasi Sopir',
+    judul: 'Verifikasi Sopir & Armada',
+    mount: (wadah) => mountAdminVerifikasi(wadah),
+  },
+  pelacakan: {
+    label: 'Pelacakan Paket',
+    judul: 'Pelacakan Paket & Pengiriman',
+    mount: (wadah) => mountAdminPelacakan(wadah),
+  },
+  customer: {
+    label: 'Data Customer',
+    judul: 'Data Pengguna Customer',
+    mount: (wadah) => mountAdminCustomer(wadah),
+  },
 };
 
 async function initAdmin() {
   const app = document.getElementById('app');
-  document.getElementById('btn-logout').addEventListener('click', logoutUser);
+  const btnLogout = document.getElementById('btn-logout');
+  if (btnLogout) btnLogout.addEventListener('click', logoutUser);
 
   let profile = null;
   try {
@@ -20,12 +37,15 @@ async function initAdmin() {
     document.getElementById('dash-title').textContent = 'Gagal memuat';
     return;
   }
-  if (!profile) { window.location.replace(urlHalaman(ROUTES.home)); return; }   // belum login
+
+  if (!profile) {
+    window.location.replace(urlHalaman(ROUTES.home));
+    return;
+  }
 
   document.getElementById('user-name').textContent = profile.nama || 'Pengguna';
   document.getElementById('user-role').textContent = profile.role;
 
-  // Tampilkan penyebabnya (jangan dialihkan diam-diam) agar mudah dilacak
   if (profile.role !== 'admin') {
     document.getElementById('dash-title').textContent = 'Akses ditolak';
     app.replaceChildren(el('section', { class: 'dash-card' },
@@ -35,86 +55,38 @@ async function initAdmin() {
   }
 
   document.getElementById('user-role').textContent = 'Admin';
-  document.getElementById('dash-title').textContent = 'Verifikasi Sopir';
   mountAdminDashboard(app);
 }
 
-async function mountAdminDashboard(root) {
-  let filter = 'perlu';
-  let sopir = [];
-  let armada = [];
+function mountAdminDashboard(root) {
+  const queryTab = new URLSearchParams(window.location.search).get('menu') || (window.location.hash ? window.location.hash.slice(1) : null);
+  let aktif = (queryTab && MENU_ADMIN[queryTab]) ? queryTab : 'verifikasi';
 
-  const msg = el('p', { class: 'dash-msg', role: 'status' });
-  const ringkasan = el('p', { class: 'dash-meta' });
-  const daftar = el('div', { class: 'dash-list' });
-  const FILTER = { perlu: 'Perlu diperiksa', verified: 'Terverifikasi', semua: 'Semua' };
-  const tabs = el('div', { class: 'dash-tabs', role: 'tablist' },
-    Object.entries(FILTER).map(([key, label]) => el('button', {
-      type: 'button', role: 'tab', 'data-filter': key,
-      onclick: () => { filter = key; render(); },
-    }, label)));
+  const menuNav = el('div', { class: 'dash-tabs admin-main-nav', role: 'tablist' },
+    Object.entries(MENU_ADMIN).map(([k, item]) => el('button', {
+      type: 'button', role: 'tab', 'data-admin-menu': k,
+      onclick: () => gantiMenu(k),
+    }, item.label)));
 
-  root.replaceChildren(el('section', { class: 'dash-card' }, tabs, ringkasan, msg, daftar));
+  const kontenWadah = el('section', { class: 'dash-card admin-content-card' });
 
-  const armadaDari = (id) => armada.filter((a) => a.pengguna_id === id);
-  const perluDiperiksa = (s) => s.status_verifikasi === 'pending' || armadaDari(s.id).some((a) => a.status_verifikasi === 'pending');
+  root.replaceChildren(menuNav, kontenWadah);
 
-  async function muat() {
-    const [p, a] = await Promise.all([
-      supabaseClient.from('profiles').select('id, nama, no_hp, status_verifikasi, created_at').eq('role', 'sopir').order('created_at', { ascending: false }),
-      supabaseClient.from('armada').select('*').order('created_at', { ascending: false }),
-    ]);
-    if (p.error || a.error) { setMsg(msg, pesanDb(p.error || a.error)); return; }
-    sopir = p.data; armada = a.data;
-    render();
+  function gantiMenu(k) {
+    if (!MENU_ADMIN[k]) return;
+    aktif = k;
+    menuNav.querySelectorAll('button').forEach((b) => {
+      b.setAttribute('aria-selected', String(b.dataset.adminMenu === aktif));
+    });
+    const item = MENU_ADMIN[aktif];
+    document.getElementById('dash-title').textContent = item.judul;
+    kontenWadah.innerHTML = '';
+    item.mount(kontenWadah);
   }
 
-  async function ubah(tabel, id, status, konfirmasi) {
-    if (konfirmasi && !confirm(konfirmasi)) return;
-    setMsg(msg, 'Menyimpan...', 'ok');
-    const { data, error } = await supabaseClient.from(tabel).update({ status_verifikasi: status }).eq('id', id).select('id');
-    if (error) { setMsg(msg, pesanDb(error)); return; }
-    if (!data || !data.length) { setMsg(msg, 'Tidak ada data yang berubah. Pastikan akun ini admin dan api/schema-armada-muatan.sql sudah dijalankan.'); return; }
-    setMsg(msg, 'Status diperbarui.', 'ok');
-    await muat();
-  }
-
-  function tombol(label, utama, fn) {
-    return el('button', { type: 'button', class: `btn ${utama ? 'btn--primary' : 'btn--ghost'} dash-btn-sm`, onclick: fn }, label);
-  }
-
-  function kartuArmada(a) {
-    const [label, tone] = STATUS_VERIF[a.status_verifikasi] || STATUS_VERIF.pending;
-    return el('div', { class: 'dash-unit' },
-      el('div', { class: 'dash-item__head' }, el('strong', {}, a.plat_nomor), badge(label, tone)),
-      el('p', {}, `${a.jenis_unit}, kapasitas ${a.kapasitas_ton} ton`),
-      el('p', { class: 'dash-meta' }, `Bak ${a.panjang_m} x ${a.lebar_m} x ${a.tinggi_m} m`),
-      el('div', { class: 'dash-actions' },
-        a.status_verifikasi !== 'verified' ? tombol('Verifikasi unit', true, () => ubah('armada', a.id, 'verified')) : null,
-        a.status_verifikasi !== 'rejected' ? tombol('Tolak unit', false, () => ubah('armada', a.id, 'rejected', `Tolak unit ${a.plat_nomor}?`)) : null));
-  }
-
-  function kartuSopir(s) {
-    const [label, tone] = STATUS_VERIF[s.status_verifikasi] || STATUS_VERIF.pending;
-    const unit = armadaDari(s.id);
-    return el('article', { class: 'dash-item' },
-      el('div', { class: 'dash-item__head' }, el('strong', {}, s.nama || '(tanpa nama)'), badge(label, tone)),
-      el('p', { class: 'dash-meta' }, `HP ${s.no_hp || '-'}, daftar ${tanggal(String(s.created_at).slice(0, 10))}`),
-      el('div', { class: 'dash-actions' },
-        s.status_verifikasi !== 'verified' ? tombol('Verifikasi akun', true, () => ubah('profiles', s.id, 'verified')) : null,
-        s.status_verifikasi !== 'rejected' ? tombol('Tolak akun', false, () => ubah('profiles', s.id, 'rejected', `Tolak akun ${s.nama}?`)) : null),
-      el('h3', { class: 'dash-sub' }, `Armada (${unit.length})`),
-      unit.length ? unit.map(kartuArmada) : el('p', { class: 'dash-empty' }, 'Belum mengisi data armada.'));
-  }
-
-  function render() {
-    tabs.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.filter === filter)));
-    const tampil = sopir.filter((s) => filter === 'semua' || (filter === 'verified' ? s.status_verifikasi === 'verified' : perluDiperiksa(s)));
-    ringkasan.textContent = `${sopir.filter(perluDiperiksa).length} dari ${sopir.length} sopir perlu diperiksa.`;
-    daftar.replaceChildren(...(tampil.length ? tampil.map(kartuSopir) : [el('p', { class: 'dash-empty' }, 'Tidak ada sopir pada daftar ini.')]));
-  }
-
-  await muat();
+  gantiMenu(aktif);
 }
 
-if (document.body.dataset.halaman === 'admin') document.addEventListener('DOMContentLoaded', initAdmin);
+if (document.body.dataset.halaman === 'admin') {
+  document.addEventListener('DOMContentLoaded', initAdmin);
+}
