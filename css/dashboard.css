@@ -31,7 +31,9 @@
 .dash-hint[data-ok="1"] { color: #067647; }
 .dash-dim { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; border: 0; padding: 0; margin: 0; min-width: 0; }
 .dash-dim legend { padding: 0; margin-bottom: 6px; font-weight: 700; font-size: .95rem; }
-.dash-loc { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.dash-loc { display: flex; flex-wrap: wrap; gap: 8px; }
+.dash-loc input { flex: 1 1 200px; }
+.dash-loc button { flex: 0 0 auto; }
 .dash-msg { min-height: 1.4em; margin: 0; font-size: .95rem; }
 .dash-msg[data-type="error"] { color: #b42318; }
 .dash-msg[data-type="ok"] { color: #067647; }

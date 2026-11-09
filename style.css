@@ -187,6 +187,24 @@ input, button { font: inherit; }
   border: 2px solid var(--line); border-radius: var(--radius-sm);
   background: var(--white); color: var(--ink);
 }
+.field--with-action input {
+  padding-right: 92px;
+}
+.field__action-btn {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 36px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--blue-50); color: var(--blue-800);
+  font: inherit; font-weight: 700; font-size: .8rem;
+  cursor: pointer; transition: background-color .15s, border-color .15s;
+}
+.field__action-btn:hover {
+  background: var(--blue-100); border-color: var(--blue-600);
+}
+.field__action-btn .icon {
+  width: 16px; height: 16px;
+}
 .field input::placeholder { color: #7a8aa3; }
 .field input:focus { outline: none; border-color: var(--blue-600); box-shadow: 0 0 0 3px var(--blue-100); }
 .field__icon {
@@ -314,3 +332,86 @@ input, button { font: inherit; }
   html { scroll-behavior: auto; }
   * { transition: none !important; }
 }
+
+/* =========================================================
+   PETA MODAL & LACAK MODAL
+   ========================================================= */
+.peta-modal {
+  width: min(680px, calc(100% - 24px));
+  max-height: calc(100dvh - 24px);
+  margin: auto; padding: 0; border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--white); color: var(--ink);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.peta-modal::backdrop { background: rgba(7, 34, 79, .65); }
+.peta-modal__box { display: flex; flex-direction: column; max-height: calc(100dvh - 24px); }
+.peta-modal__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--line);
+}
+.peta-modal__head h3 { margin: 0; font-size: 1.15rem; color: var(--blue-950); }
+.peta-modal__close {
+  border: 0; background: transparent; font-size: 1.8rem; line-height: 1;
+  color: var(--muted); cursor: pointer; padding: 0 4px; border-radius: var(--radius-sm);
+}
+.peta-modal__close:hover { color: var(--ink); background: var(--blue-50); }
+
+.peta-modal__search {
+  display: flex; gap: 8px; padding: 10px 16px;
+  background: var(--blue-50); border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.peta-modal__search-input {
+  flex: 1 1 180px; min-height: 40px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--white); font: inherit; font-size: .9rem;
+}
+.peta-modal__search-input:focus { outline: none; border-color: var(--blue-600); }
+
+.peta-modal__map {
+  width: 100%; height: 350px; min-height: 260px;
+  background: #e5e3df; position: relative; isolation: isolate;
+}
+
+.peta-modal__info {
+  padding: 12px 18px; border-top: 1px solid var(--line);
+  background: #fafcff; display: grid; gap: 4px;
+}
+.peta-modal__hint { margin: 0; font-size: .8rem; color: var(--muted); }
+.peta-modal__addr { margin: 0; font-weight: 700; font-size: .92rem; color: var(--blue-950); word-break: break-word; }
+.peta-modal__coord { color: var(--muted); font-size: .8rem; }
+
+.peta-modal__foot {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 12px 18px; border-top: 1px solid var(--line); background: var(--white);
+}
+
+/* Modal Lacak Kiriman */
+.lacak-modal {
+  width: min(520px, calc(100% - 24px));
+  max-height: calc(100dvh - 24px);
+  margin: auto; padding: 0; border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--white); color: var(--ink);
+  box-shadow: var(--shadow);
+  overflow: auto;
+}
+.lacak-modal::backdrop { background: rgba(7, 34, 79, .65); }
+.lacak-modal__box { padding: 20px; position: relative; }
+.lacak-modal__close {
+  position: absolute; top: 12px; right: 12px;
+  border: 0; background: transparent; font-size: 1.8rem; line-height: 1;
+  color: var(--muted); cursor: pointer; padding: 0 6px; border-radius: var(--radius-sm);
+}
+.lacak-modal__close:hover { color: var(--ink); background: var(--blue-50); }
+.lacak-card { margin-top: 14px; display: grid; gap: 12px; }
+.lacak-timeline { display: grid; gap: 10px; margin-top: 12px; padding-left: 8px; border-left: 2px solid var(--line); }
+.lacak-timeline__item { position: relative; padding-left: 14px; font-size: .88rem; }
+.lacak-timeline__item::before {
+  content: ""; position: absolute; left: -19px; top: 4px;
+  width: 10px; height: 10px; border-radius: 50%; background: var(--blue-600);
+}
+.lacak-timeline__time { color: var(--muted); font-size: .8rem; }
+

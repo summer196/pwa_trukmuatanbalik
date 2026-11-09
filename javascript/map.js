@@ -89,5 +89,219 @@ const MapUI = (() => {
   /** Panggil saat wadah peta baru terlihat (tab/modal), agar ukuran dihitung ulang. */
   const perbaruiUkuran = (peta) => setTimeout(() => peta.invalidateSize(), 50);
 
-  return { init, tampilkanMuatan, tandaiLokasi, pilihTitik, namaDariTitik, perbaruiUkuran };
+  /**
+   * Modal dialog interaktif untuk memilih titik lokasi di peta dengan Leaflet.
+   * Parameter:
+   * - judul: string (mis. "Pilih Lokasi Asal")
+   * - lat, lon: number | null (koordinat awal jika sudah ada)
+   * - namaAwal: string (nama lokasi awal jika ada)
+   * - onPilih: function({ lat, lon, nama })
+   */
+  function bukaModalPilihTitik({ judul = 'Pilih Titik di Peta', lat = null, lon = null, namaAwal = '', onPilih } = {}) {
+    let dialog = document.getElementById('modal-pilih-peta');
+    if (!dialog) {
+      dialog = buat('dialog', null, 'peta-modal');
+      dialog.id = 'modal-pilih-peta';
+      document.body.appendChild(dialog);
+    }
+    dialog.innerHTML = '';
+
+    const box = buat('div', null, 'peta-modal__box');
+
+    // Header
+    const head = buat('div', null, 'peta-modal__head');
+    const h3 = buat('h3', judul);
+    const closeBtn = buat('button', '×', 'peta-modal__close');
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', 'Tutup');
+    head.append(h3, closeBtn);
+
+    // Search bar di dalam peta (opsi cari cepat agar bisa langsung melompat ke kota/area)
+    const searchBar = buat('div', null, 'peta-modal__search');
+    const searchInput = buat('input', null, 'peta-modal__search-input');
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Ketik kota / jalan untuk melompat ke area...';
+    if (namaAwal) searchInput.value = namaAwal;
+    const searchBtn = buat('button', 'Cari', 'btn btn--ghost dash-btn-sm');
+    searchBtn.type = 'button';
+    const gpsBtn = buat('button', '📍 Lokasi Saya', 'btn btn--ghost dash-btn-sm');
+    gpsBtn.type = 'button';
+    searchBar.append(searchInput, searchBtn, gpsBtn);
+
+    // Wadah Peta
+    const mapContainer = buat('div', null, 'peta-modal__map');
+    const mapId = 'map-picker-' + Date.now();
+    mapContainer.id = mapId;
+
+    // Hint & preview info
+    const infoBox = buat('div', null, 'peta-modal__info');
+    const hintText = buat('p', 'Klik pada peta atau geser pin untuk menentukan titik presisi.', 'peta-modal__hint');
+    const addrText = buat('p', namaAwal || 'Belum ada titik yang dipilih.', 'peta-modal__addr');
+    const validLatLon = (lat != null && lon != null && Number.isFinite(Number(lat)) && Number.isFinite(Number(lon)));
+    const coordText = buat('small', validLatLon ? `Koordinat: ${Number(lat).toFixed(6)}, ${Number(lon).toFixed(6)}` : '', 'peta-modal__coord');
+    infoBox.append(hintText, addrText, coordText);
+
+    // Footer actions
+    const foot = buat('div', null, 'peta-modal__foot');
+    const cancelBtn = buat('button', 'Batal', 'btn btn--ghost');
+    cancelBtn.type = 'button';
+    const confirmBtn = buat('button', 'Gunakan Titik Ini', 'btn btn--primary');
+    confirmBtn.type = 'button';
+    confirmBtn.disabled = !validLatLon;
+    foot.append(cancelBtn, confirmBtn);
+
+    box.append(head, searchBar, mapContainer, infoBox, foot);
+    dialog.appendChild(box);
+
+    dialog.showModal();
+
+    // Inisialisasi peta Leaflet
+    const defaultCenter = validLatLon ? [Number(lat), Number(lon)] : [-6.2088, 106.8456];
+    const defaultZoom = validLatLon ? 15 : 9;
+
+    const pickerMap = L.map(mapId).setView(defaultCenter, defaultZoom);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      crossOrigin: true,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(pickerMap);
+
+    let marker = null;
+    let selectedPoint = validLatLon ? { lat: Number(lat), lon: Number(lon), nama: namaAwal } : null;
+
+    function pasangEventMarker(m) {
+      m.on('dragend', (e) => {
+        const pos = e.target.getLatLng();
+        updateSelection(+pos.lat.toFixed(6), +pos.lng.toFixed(6));
+      });
+    }
+
+    if (selectedPoint) {
+      marker = L.marker([selectedPoint.lat, selectedPoint.lon], { draggable: true }).addTo(pickerMap);
+      pasangEventMarker(marker);
+    }
+
+    perbaruiUkuran(pickerMap);
+
+    let reverseTimer = null;
+    function updateSelection(newLat, newLon, customName = null) {
+      selectedPoint = { lat: newLat, lon: newLon, nama: customName || '' };
+      coordText.textContent = `Koordinat: ${newLat.toFixed(6)}, ${newLon.toFixed(6)}`;
+      confirmBtn.disabled = false;
+
+      if (!customName) {
+        addrText.textContent = 'Mencari alamat detail...';
+        clearTimeout(reverseTimer);
+        reverseTimer = setTimeout(() => {
+          namaDariTitik(newLat, newLon).then((name) => {
+            selectedPoint.nama = name;
+            addrText.textContent = name;
+          }).catch(() => {
+            selectedPoint.nama = `${newLat.toFixed(6)}, ${newLon.toFixed(6)}`;
+            addrText.textContent = selectedPoint.nama;
+          });
+        }, 200);
+      } else {
+        addrText.textContent = customName;
+      }
+    }
+
+    // Klik pada peta untuk pindahkan marker
+    pickerMap.on('click', (e) => {
+      const clickLat = +e.latlng.lat.toFixed(6);
+      const clickLon = +e.latlng.lng.toFixed(6);
+      if (marker) {
+        marker.setLatLng([clickLat, clickLon]);
+      } else {
+        marker = L.marker([clickLat, clickLon], { draggable: true }).addTo(pickerMap);
+        pasangEventMarker(marker);
+      }
+      updateSelection(clickLat, clickLon);
+    });
+
+    // Tombol cari di modal
+    async function cariLokasiModal() {
+      const q = searchInput.value.trim();
+      if (!q) return;
+      searchBtn.disabled = true;
+      searchBtn.textContent = '...';
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=id&accept-language=id&q=${encodeURIComponent(q)}`;
+        const [hit] = await (await fetch(url)).json();
+        if (hit) {
+          const hitLat = +Number(hit.lat).toFixed(6);
+          const hitLon = +Number(hit.lon).toFixed(6);
+          pickerMap.setView([hitLat, hitLon], 14);
+          if (marker) {
+            marker.setLatLng([hitLat, hitLon]);
+          } else {
+            marker = L.marker([hitLat, hitLon], { draggable: true }).addTo(pickerMap);
+            pasangEventMarker(marker);
+          }
+          updateSelection(hitLat, hitLon, hit.display_name);
+        } else {
+          alert('Lokasi tidak ditemukan. Coba tambahkan nama kota.');
+        }
+      } catch (err) {
+        alert('Gagal mencari lokasi. Periksa koneksi internet.');
+      } finally {
+        searchBtn.disabled = false;
+        searchBtn.textContent = 'Cari';
+      }
+    }
+
+    searchBtn.addEventListener('click', cariLokasiModal);
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        cariLokasiModal();
+      }
+    });
+
+    // Tombol GPS
+    gpsBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        alert('GPS tidak didukung perangkat ini.');
+        return;
+      }
+      gpsBtn.disabled = true;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          gpsBtn.disabled = false;
+          const myLat = +pos.coords.latitude.toFixed(6);
+          const myLon = +pos.coords.longitude.toFixed(6);
+          pickerMap.setView([myLat, myLon], 15);
+          if (marker) {
+            marker.setLatLng([myLat, myLon]);
+          } else {
+            marker = L.marker([myLat, myLon], { draggable: true }).addTo(pickerMap);
+            pasangEventMarker(marker);
+          }
+          updateSelection(myLat, myLon);
+        },
+        () => {
+          gpsBtn.disabled = false;
+          alert('Gagal mengambil lokasi GPS. Pastikan izin lokasi browser aktif.');
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    });
+
+    function tutup() {
+      pickerMap.remove();
+      dialog.close();
+    }
+
+    closeBtn.addEventListener('click', tutup);
+    cancelBtn.addEventListener('click', tutup);
+
+    confirmBtn.addEventListener('click', () => {
+      if (selectedPoint && onPilih) {
+        onPilih(selectedPoint);
+      }
+      tutup();
+    });
+  }
+
+  return { init, tampilkanMuatan, tandaiLokasi, pilihTitik, namaDariTitik, perbaruiUkuran, bukaModalPilihTitik };
 })();

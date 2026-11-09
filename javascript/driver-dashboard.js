@@ -22,11 +22,16 @@ function mountDriverDashboard(root, profile) {
   });
   window.addEventListener('pagehide', berhenti);
 
+  const queryTab = new URLSearchParams(window.location.search).get('tab') || (window.location.hash ? window.location.hash.slice(1) : null);
+  const tabDefault = (queryTab && ['cari', 'pengiriman', 'armada'].includes(queryTab))
+    ? queryTab
+    : (terverifikasi ? 'cari' : 'armada');
+
   pasangPanelTab(root, {
     cari: { label: 'Cari muatan', panel: panelCari },
     pengiriman: { label: 'Pengiriman', panel: panelPengiriman },
     armada: { label: 'Armada', panel: panelArmada },
-  }, terverifikasi ? 'cari' : 'armada', ctx);
+  }, tabDefault, ctx);
 }
 
 /* =====================================================================
@@ -130,12 +135,56 @@ function panelCari({ profile, terverifikasi, bus }) {
 
   bus.muatanBaru = () => setMsg(msg, 'Ada muatan baru diposting. Tekan cari lagi untuk memperbarui hasil.', 'ok');
 
+  function prosesPencarianAwal() {
+    const params = new URLSearchParams(window.location.search);
+    let sLat = params.get('sekarang_lat');
+    let sLon = params.get('sekarang_lon');
+    let sNama = params.get('sekarang_nama');
+    let pLat = params.get('pulang_lat');
+    let pLon = params.get('pulang_lon');
+    let pNama = params.get('pulang_nama');
+    let auto = params.get('auto') === '1' || params.get('mode') === 'balik';
+
+    if (!sLat && !pLat) {
+      try {
+        const pending = sessionStorage.getItem('muatanku:pending_search');
+        if (pending) {
+          sessionStorage.removeItem('muatanku:pending_search');
+          const p = JSON.parse(pending);
+          sLat = p.sekarang_lat; sLon = p.sekarang_lon; sNama = p.sekarang_nama;
+          pLat = p.pulang_lat; pLon = p.pulang_lon; pNama = p.pulang_nama;
+          auto = true;
+        }
+      } catch (e) { /* abaikan */ }
+    }
+
+    if (sLat && sLon) {
+      form.elements.sekarang_lat.value = sLat;
+      form.elements.sekarang_lon.value = sLon;
+      form.elements.sekarang_nama.value = sNama ? decodeURIComponent(sNama) : `${sLat}, ${sLon}`;
+    }
+    if (pLat && pLon) {
+      form.elements.pulang_lat.value = pLat;
+      form.elements.pulang_lon.value = pLon;
+      form.elements.pulang_nama.value = pNama ? decodeURIComponent(pNama) : `${pLat}, ${pLon}`;
+    }
+
+    if (auto && sLat && pLat) {
+      setTimeout(() => jalankan('balik'), 300);
+      return true;
+    }
+    return false;
+  }
+
   return {
     el: panel,
     setelahTampil() {
       if (typeof L !== 'undefined') peta = MapUI.init('peta');
-      const t = ambil();
-      if (t) tampilkan(t.hasil, `Hasil pencarian terakhir (${waktuLokal(t.waktu)}). Tekan cari untuk memperbarui.`);
+      const sudahJalan = prosesPencarianAwal();
+      if (!sudahJalan) {
+        const t = ambil();
+        if (t) tampilkan(t.hasil, `Hasil pencarian terakhir (${waktuLokal(t.waktu)}). Tekan cari untuk memperbarui.`);
+      }
     },
     hancurkan() { if (peta) peta.remove(); peta = null; },
   };

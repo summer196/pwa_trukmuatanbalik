@@ -54,12 +54,13 @@ function pesanDb(error) {
    Dipakai untuk asal/tujuan muatan. Koordinat disimpan di input tersembunyi
    <prefix>_lat dan <prefix>_lon, dan dibutuhkan nanti untuk rumus Haversine. */
 function lokasiField(prefix, label) {
-  const petunjuk = 'Ketik lokasi lalu tekan "Cari titik".';
+  const petunjuk = 'Ketik lokasi, tekan "Cari titik", atau pilih langsung di peta.';
   const nama = input(`${prefix}_nama`, 'text', { required: true, autocomplete: 'off', 'aria-label': label, placeholder: 'Contoh: Pelabuhan Tanjung Priok, Jakarta' });
   const lat = input(`${prefix}_lat`, 'hidden');
   const lon = input(`${prefix}_lon`, 'hidden');
   const info = el('small', { class: 'dash-hint', 'aria-live': 'polite' }, petunjuk);
   const cari = el('button', { type: 'button', class: 'btn btn--ghost dash-btn-sm' }, 'Cari titik');
+  const pilihPeta = el('button', { type: 'button', class: 'btn btn--ghost dash-btn-sm', title: 'Pilih titik langsung di peta untuk lokasi presisi' }, '🗺️ Pilih di Peta');
 
   nama.addEventListener('input', () => { lat.value = ''; lon.value = ''; info.textContent = petunjuk; delete info.dataset.ok; });
   cari.addEventListener('click', async () => {
@@ -78,8 +79,28 @@ function lokasiField(prefix, label) {
     } finally { cari.disabled = false; }
   });
 
+  pilihPeta.addEventListener('click', () => {
+    if (typeof MapUI === 'undefined' || !MapUI.bukaModalPilihTitik) {
+      alert('Fitur peta belum siap dimuat.');
+      return;
+    }
+    MapUI.bukaModalPilihTitik({
+      judul: `Pilih Titik: ${label}`,
+      lat: lat.value ? Number(lat.value) : null,
+      lon: lon.value ? Number(lon.value) : null,
+      namaAwal: nama.value || '',
+      onPilih: (titik) => {
+        lat.value = titik.lat.toFixed(6);
+        lon.value = titik.lon.toFixed(6);
+        nama.value = titik.nama;
+        info.textContent = `Titik dipilih di peta: ${titik.nama}`;
+        info.dataset.ok = '1';
+      }
+    });
+  });
+
   return el('div', { class: 'dash-field' }, el('span', {}, label),
-    el('div', { class: 'dash-loc' }, nama, cari), info, lat, lon);
+    el('div', { class: 'dash-loc' }, nama, cari, pilihPeta), info, lat, lon);
 }
 
 /* ---------- Panel bertab (dipakai dasbor sopir dan customer) ----------

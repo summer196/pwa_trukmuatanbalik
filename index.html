@@ -11,6 +11,8 @@
   <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
 
@@ -92,34 +94,44 @@
             <label for="tab-lacak" role="tab">Lacak Kiriman</label>
           </div>
 
-          <form class="panel panel--cari" action="#" onsubmit="return false">
-            <label class="field">
+          <form class="panel panel--cari" id="hero-form-cari" action="#" onsubmit="return false">
+            <div class="field field--with-action">
               <svg class="icon field__icon field__icon--start"><use href="#i-pin"/></svg>
               <span class="sr-only">Lokasi sekarang</span>
-              <input type="text" placeholder="Lokasi sekarang" autocomplete="off">
-            </label>
-            <label class="field">
+              <input type="text" id="hero-lokasi-sekarang" placeholder="Lokasi sekarang" autocomplete="off">
+              <input type="hidden" id="hero-sekarang-lat">
+              <input type="hidden" id="hero-sekarang-lon">
+              <button type="button" class="field__action-btn" id="hero-btn-map-sekarang" title="Pilih di peta">
+                <svg class="icon" viewBox="0 0 24 24"><use href="#i-pin"/></svg> Peta
+              </button>
+            </div>
+            <div class="field field--with-action">
               <svg class="icon field__icon field__icon--end"><use href="#i-back"/></svg>
               <span class="sr-only">Kota pulang</span>
-              <input type="text" placeholder="Kota pulang" autocomplete="off">
-            </label>
+              <input type="text" id="hero-kota-pulang" placeholder="Kota pulang" autocomplete="off">
+              <input type="hidden" id="hero-pulang-lat">
+              <input type="hidden" id="hero-pulang-lon">
+              <button type="button" class="field__action-btn" id="hero-btn-map-pulang" title="Pilih di peta">
+                <svg class="icon" viewBox="0 0 24 24"><use href="#i-pin"/></svg> Peta
+              </button>
+            </div>
             <button type="submit" class="btn btn--primary btn--block">Cari Muatan Balik</button>
           </form>
 
-          <form class="panel panel--lacak" action="#" onsubmit="return false">
+          <form class="panel panel--lacak" id="hero-form-lacak" action="#" onsubmit="return false">
             <label class="field">
               <svg class="icon field__icon field__icon--start"><use href="#i-box"/></svg>
               <span class="sr-only">Nomor pengiriman</span>
-              <input type="text" placeholder="Masukkan nomor pengiriman" autocomplete="off">
+              <input type="text" id="hero-nomor-pengiriman" placeholder="Masukkan nomor pengiriman (ID)" autocomplete="off">
             </label>
             <button type="submit" class="btn btn--primary btn--block">Lacak Pengiriman</button>
           </form>
         </div>
 
         <ul class="quick" aria-label="Aksi cepat lainnya">
-          <li><a href="#"><span class="quick__icon"><svg class="icon"><use href="#i-pin"/></svg></span>Muatan Sekitar</a></li>
-          <li><a href="#"><span class="quick__icon"><svg class="icon"><use href="#i-box"/></svg></span>Posting Muatan</a></li>
-          <li><a href="#"><span class="quick__icon"><svg class="icon"><use href="#i-truck"/></svg></span>Profil Armada</a></li>
+          <li><a href="#" id="quick-muatan-sekitar"><span class="quick__icon"><svg class="icon"><use href="#i-pin"/></svg></span>Muatan Sekitar</a></li>
+          <li><a href="#" id="quick-posting-muatan"><span class="quick__icon"><svg class="icon"><use href="#i-box"/></svg></span>Posting Muatan</a></li>
+          <li><a href="#" id="quick-profil-armada"><span class="quick__icon"><svg class="icon"><use href="#i-truck"/></svg></span>Profil Armada</a></li>
         </ul>
       </div>
     </section>
@@ -272,6 +284,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js"></script>
   <script src="javascript/supabase-config.js"></script>
   <script src="javascript/auth.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="javascript/map.js"></script>
+  <script src="javascript/search-engine.js"></script>
+  <script src="javascript/transaction.js"></script>
+  <script src="javascript/landing.js"></script>
   <script src="javascript/pwa.js" defer></script>
 
 </body>

@@ -17,10 +17,13 @@ function mountCustomerDashboard(root, profile) {
   });
   window.addEventListener('pagehide', berhenti);
 
+  const queryTab = new URLSearchParams(window.location.search).get('tab') || (window.location.hash ? window.location.hash.slice(1) : null);
+  const tabDefault = (queryTab && ['muatan', 'pengiriman'].includes(queryTab)) ? queryTab : 'muatan';
+
   pasangPanelTab(root, {
     muatan: { label: 'Muatan', panel: panelMuatan },
     pengiriman: { label: 'Pengiriman', panel: panelPengirimanCustomer },
-  }, 'muatan', ctx);
+  }, tabDefault, ctx);
 }
 
 /* =====================================================================
