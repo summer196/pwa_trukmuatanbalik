@@ -3,23 +3,35 @@
    1. Verifikasi Sopir (admin-verifikasi.js)
    2. Pelacakan Paket (admin-pengiriman.js)
    3. Data Customer (admin-customer.js)
+   4. Posting Muatan (admin-posting-muatan.js)
+   5. Cari Muatan (admin-cari-muatan.js)
    Bergantung pada: supabase-config.js, auth.js, dashboard.js */
 
 const MENU_ADMIN = {
   verifikasi: {
     label: 'Verifikasi Sopir',
     judul: 'Verifikasi Sopir & Armada',
-    mount: (wadah) => mountAdminVerifikasi(wadah),
+    mount: (wadah, ctx) => mountAdminVerifikasi(wadah, ctx),
   },
   pelacakan: {
     label: 'Pelacakan Paket',
     judul: 'Pelacakan Paket & Pengiriman',
-    mount: (wadah) => mountAdminPelacakan(wadah),
+    mount: (wadah, ctx) => mountAdminPelacakan(wadah, ctx),
   },
   customer: {
     label: 'Data Customer',
     judul: 'Data Pengguna Customer',
-    mount: (wadah) => mountAdminCustomer(wadah),
+    mount: (wadah, ctx) => mountAdminCustomer(wadah, ctx),
+  },
+  posting: {
+    label: 'Posting Muatan',
+    judul: 'Posting & Kelola Muatan (Akses Admin)',
+    mount: (wadah, ctx) => mountAdminPostingMuatan(wadah, ctx),
+  },
+  cari: {
+    label: 'Cari Muatan',
+    judul: 'Pencarian Muatan Balik & Sekitar (Akses Admin)',
+    mount: (wadah, ctx) => mountAdminCariMuatan(wadah, ctx),
   },
 };
 
@@ -55,10 +67,10 @@ async function initAdmin() {
   }
 
   document.getElementById('user-role').textContent = 'Admin';
-  mountAdminDashboard(app);
+  mountAdminDashboard(app, profile);
 }
 
-function mountAdminDashboard(root) {
+function mountAdminDashboard(root, profile) {
   const queryTab = new URLSearchParams(window.location.search).get('menu') || (window.location.hash ? window.location.hash.slice(1) : null);
   let aktif = (queryTab && MENU_ADMIN[queryTab]) ? queryTab : 'verifikasi';
 
@@ -68,7 +80,7 @@ function mountAdminDashboard(root) {
       onclick: () => gantiMenu(k),
     }, item.label)));
 
-  const kontenWadah = el('section', { class: 'dash-card admin-content-card' });
+  const kontenWadah = el('div', { class: 'admin-content-card' });
 
   root.replaceChildren(menuNav, kontenWadah);
 
@@ -81,7 +93,7 @@ function mountAdminDashboard(root) {
     const item = MENU_ADMIN[aktif];
     document.getElementById('dash-title').textContent = item.judul;
     kontenWadah.innerHTML = '';
-    item.mount(kontenWadah);
+    item.mount(kontenWadah, { profile });
   }
 
   gantiMenu(aktif);

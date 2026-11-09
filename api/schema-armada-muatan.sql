@@ -66,4 +66,11 @@ create policy "customer hapus muatan terbuka" on public.muatan
   for delete using (customer_id = auth.uid() and status = 'terbuka');
 create policy "admin baca semua muatan" on public.muatan
   for select using (public.is_admin());
+create policy "admin posting muatan" on public.muatan
+  for insert with check (
+    customer_id = auth.uid() and public.is_admin());
+create policy "admin ubah muatan" on public.muatan
+  for update using (public.is_admin()) with check (public.is_admin());
+create policy "admin hapus muatan" on public.muatan
+  for delete using (public.is_admin());
 -- Akses sopir untuk MENCARI muatan terbuka ditambahkan di langkah pencarian.

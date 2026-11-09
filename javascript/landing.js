@@ -148,16 +148,18 @@ function initHeroForms() {
       let profile = null;
       try { profile = await getCurrentProfile(); } catch (err) { /* abaikan */ }
 
-      if (profile && profile.role === 'sopir') {
-        // Sopir login -> langsung buka dasbor pencarian dengan auto search
+      if (profile && (profile.role === 'sopir' || profile.role === 'admin')) {
+        const isAdmin = profile.role === 'admin';
+        const targetUrl = isAdmin ? 'html/admin.html' : 'html/dashboard.html';
         const qs = new URLSearchParams({
-          tab: 'cari', mode: 'balik', auto: '1',
+          ...(isAdmin ? { menu: 'cari' } : { tab: 'cari' }),
+          mode: 'balik', auto: '1',
           ...searchPayload,
         }).toString();
-        window.location.href = `html/dashboard.html?${qs}`;
+        window.location.href = `${targetUrl}?${qs}`;
       } else if (profile && profile.role === 'customer') {
         btnSubmit.disabled = false; btnSubmit.textContent = labelAsli;
-        alert('Pencarian muatan balik dikhususkan untuk akun Sopir. Anda saat ini masuk sebagai Customer.');
+        alert('Pencarian muatan balik dikhususkan untuk akun Sopir atau Admin. Anda saat ini masuk sebagai Customer.');
       } else {
         // Belum login -> simpan pencarian dan arahkan untuk login / daftar sopir
         btnSubmit.disabled = false; btnSubmit.textContent = labelAsli;
@@ -308,7 +310,7 @@ function initQuickActions() {
     if (!modal.open) modal.showModal();
   }
 
-  // Muatan Sekitar -> tab cari muatan (khusus Sopir)
+  // Muatan Sekitar -> tab cari muatan (Sopir / Admin)
   if (btnMuatanSekitar) {
     btnMuatanSekitar.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -317,15 +319,17 @@ function initQuickActions() {
 
       if (!profile) {
         bukaModalAuth('login', 'sopir');
+      } else if (profile.role === 'admin') {
+        window.location.href = 'html/admin.html?menu=cari';
       } else if (profile.role === 'sopir') {
         window.location.href = 'html/dashboard.html?tab=cari';
       } else {
-        alert('Fitur pencarian muatan sekitar adalah untuk Sopir. Buka dasbor untuk melihat muatan Anda.');
+        alert('Fitur pencarian muatan sekitar adalah untuk Sopir atau Admin. Buka dasbor untuk melihat muatan Anda.');
       }
     });
   }
 
-  // Posting Muatan -> tab muatan (khusus Customer)
+  // Posting Muatan -> tab muatan (Customer / Admin)
   if (btnPostingMuatan) {
     btnPostingMuatan.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -334,15 +338,17 @@ function initQuickActions() {
 
       if (!profile) {
         bukaModalAuth('register', 'customer');
+      } else if (profile.role === 'admin') {
+        window.location.href = 'html/admin.html?menu=posting';
       } else if (profile.role === 'customer') {
         window.location.href = 'html/dashboard.html?tab=muatan';
       } else {
-        alert('Fitur posting muatan adalah untuk Customer. Buka dasbor Sopir Anda untuk mencari muatan.');
+        alert('Fitur posting muatan adalah untuk Customer atau Admin. Buka dasbor Sopir Anda untuk mencari muatan.');
       }
     });
   }
 
-  // Profil Armada -> tab armada (khusus Sopir)
+  // Profil Armada -> tab armada (Sopir / Admin verifikasi)
   if (btnProfilArmada) {
     btnProfilArmada.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -351,6 +357,8 @@ function initQuickActions() {
 
       if (!profile) {
         bukaModalAuth('register', 'sopir');
+      } else if (profile.role === 'admin') {
+        window.location.href = 'html/admin.html?menu=verifikasi';
       } else if (profile.role === 'sopir') {
         window.location.href = 'html/dashboard.html?tab=armada';
       } else {

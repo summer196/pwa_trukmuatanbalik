@@ -9,7 +9,7 @@
    - Tile peta OpenStreetMap                   : "cache dulu", dibatasi jumlahnya.
    - Auth, realtime, pencarian lokasi, dan semua request non-GET : tidak disentuh (langsung ke jaringan). */
 
-const VERSI = 'v6';
+const VERSI = 'v7';
 const CACHE_SHELL = `muatanku-shell-${VERSI}`;
 const CACHE_ASET = `muatanku-aset-${VERSI}`;
 const CACHE_API = `muatanku-api-${VERSI}`;
@@ -27,6 +27,7 @@ const SHELL = [
   'javascript/landing.js',
   'javascript/dashboard.js', 'javascript/driver-dashboard.js', 'javascript/customer-dashboard.js',
   'javascript/admin-dashboard.js', 'javascript/admin-verifikasi.js', 'javascript/admin-pengiriman.js', 'javascript/admin-customer.js',
+  'javascript/admin-posting-muatan.js', 'javascript/admin-cari-muatan.js',
   'javascript/search-engine.js', 'javascript/transaction.js', 'javascript/map.js',
   'img/logo.svg', 'img/logo-icon.svg', 'img/logo-horizontal.svg', 'img/logo-horizontal-white.svg',
   'img/icons/icon-192.png', 'img/icons/icon-512.png',
