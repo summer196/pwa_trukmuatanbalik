@@ -8,13 +8,35 @@ const STATUS_VERIF = {
 };
 
 async function initAdmin() {
-  const admin = await requireRole(['admin']);   // bukan admin -> dialihkan ke halamannya
-  if (!admin) return;
-  document.getElementById('user-name').textContent = admin.nama || 'Admin';
+  const app = document.getElementById('app');
+  document.getElementById('btn-logout').addEventListener('click', logoutUser);
+
+  let profile = null;
+  try {
+    profile = await getCurrentProfile();
+  } catch (err) {
+    console.error(err);
+    app.replaceChildren(el('p', { class: 'dash-msg', 'data-type': 'error' }, pesanDb(err)));
+    document.getElementById('dash-title').textContent = 'Gagal memuat';
+    return;
+  }
+  if (!profile) { window.location.replace(urlHalaman(ROUTES.home)); return; }   // belum login
+
+  document.getElementById('user-name').textContent = profile.nama || 'Pengguna';
+  document.getElementById('user-role').textContent = profile.role;
+
+  // Tampilkan penyebabnya (jangan dialihkan diam-diam) agar mudah dilacak
+  if (profile.role !== 'admin') {
+    document.getElementById('dash-title').textContent = 'Akses ditolak';
+    app.replaceChildren(el('section', { class: 'dash-card' },
+      el('p', {}, `Akun ini berperan "${profile.role}", bukan admin. Jalankan perintah promosi admin di api/schema.sql untuk email ini, lalu keluar dan masuk lagi.`),
+      el('a', { href: 'dashboard.html', class: 'btn btn--primary' }, 'Ke dasbor saya')));
+    return;
+  }
+
   document.getElementById('user-role').textContent = 'Admin';
   document.getElementById('dash-title').textContent = 'Verifikasi Sopir';
-  document.getElementById('btn-logout').addEventListener('click', logoutUser);
-  mountAdminDashboard(document.getElementById('app'));
+  mountAdminDashboard(app);
 }
 
 async function mountAdminDashboard(root) {
