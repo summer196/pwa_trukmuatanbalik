@@ -59,6 +59,23 @@ function redirectByRole(profile) {
   window.location.href = urlHalaman(routeFor(profile));
 }
 
+async function updateLandingNavigation() {
+  const nav = document.querySelector('.nav');
+  const dashboardLink = nav && nav.querySelector('[data-auth-dashboard]');
+  if (!nav || !dashboardLink || !supabaseClient) return;
+
+  try {
+    const profile = await getCurrentProfile();
+    if (!profile) return;
+
+    dashboardLink.href = urlHalaman(routeFor(profile));
+    dashboardLink.hidden = false;
+    nav.querySelectorAll('[data-auth-open]').forEach((link) => { link.hidden = true; });
+  } catch (error) {
+    console.error('[Muatanku] Gagal memuat sesi untuk navigasi:', error);
+  }
+}
+
 /* ---------- Registrasi, login, logout ---------- */
 async function registerUser({ nama, noHp, email, password, role }) {
   if (!supabaseClient) return { ok: false, message: PESAN_BELUM_SIAP };
@@ -117,6 +134,8 @@ async function requireRole(allowedRoles) {
 
 /* ---------- UI modal masuk/daftar (halaman pendaratan) ---------- */
 function initAuthUI() {
+  updateLandingNavigation();
+
   const modal = document.getElementById('auth-modal');
   if (!modal) return;
 
