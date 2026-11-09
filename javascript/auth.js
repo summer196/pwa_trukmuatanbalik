@@ -61,7 +61,6 @@ function redirectByRole(profile) {
 
 async function updateLandingNavigation() {
   const nav = document.querySelector('.nav');
-  const dashboardLink = nav && nav.querySelector('[data-auth-dashboard]');
   const profileEl = document.getElementById('nav-profile');
   if (!nav || !supabaseClient) return;
 
@@ -71,9 +70,6 @@ async function updateLandingNavigation() {
 
     // Sembunyikan tombol Masuk & Daftar
     nav.querySelectorAll('[data-auth-open]').forEach((link) => { link.hidden = true; });
-
-    // Sembunyikan tombol Dashboard lama (digantikan profil)
-    if (dashboardLink) dashboardLink.hidden = true;
 
     // Tampilkan panel profil
     if (profileEl) {
@@ -116,6 +112,20 @@ async function updateLandingNavigation() {
       // Tombol logout
       const logoutBtn = profileEl.querySelector('[data-auth-logout]');
       if (logoutBtn) logoutBtn.addEventListener('click', () => logoutUser());
+    }
+
+    // Update footer: sembunyikan Masuk/Daftar, tampilkan Dashboard
+    const dashboardUrl = urlHalaman(routeFor(profile));
+    document.querySelectorAll('[data-footer-auth]').forEach((el) => { el.hidden = true; });
+    const footerDash = document.querySelector('[data-footer-dashboard]');
+    if (footerDash) { footerDash.href = dashboardUrl; footerDash.hidden = false; }
+
+    // Update CTA: ubah "Daftar Sekarang" jadi "Buka Dashboard"
+    const ctaBtn = document.querySelector('[data-cta-register]');
+    if (ctaBtn) {
+      ctaBtn.textContent = 'Buka Dashboard';
+      ctaBtn.href = dashboardUrl;
+      ctaBtn.removeAttribute('data-auth-open');
     }
   } catch (error) {
     console.error('[Muatanku] Gagal memuat sesi untuk navigasi:', error);
