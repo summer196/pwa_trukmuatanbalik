@@ -54,3 +54,4 @@
   .dash-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
   .dash-card { padding: 24px; }
 }
+.dash .btn--primary[disabled] { background: var(--muted); cursor: not-allowed; }

@@ -67,7 +67,10 @@ async function registerUser({ nama, noHp, email, password, role }) {
   const { data, error } = await supabaseClient.auth.signUp({
     email,
     password,
-    options: { data: { nama, no_hp: noHp, role } }, // dibaca trigger di database
+    options: {
+      data: { nama, no_hp: noHp, role },                 // dibaca trigger di database
+      emailRedirectTo: urlHalaman(ROUTES[role]),         // tujuan tautan konfirmasi email (alamat situs yang sedang dipakai)
+    },
   });
   if (error) return { ok: false, message: pesanError(error) };
 
