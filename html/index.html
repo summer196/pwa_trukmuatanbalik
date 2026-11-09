@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Muatan Balik – Cari Muatan untuk Truk Kelas Berat</title>
+  <meta name="description" content="Aplikasi pencarian muatan balik untuk truk kelas berat dengan validasi kecocokan muatan dan armada.">
+  <meta name="theme-color" content="#0b3d91">
+  <!-- Langkah PWA nanti: <link rel="manifest" href="manifest.json"> -->
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- Ikon SVG (sprite) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3 6h11v9H3zM14 9h4l3 3v3h-7zM7 18.5a1.8 1.8 0 1 0 0-.01M17 18.5a1.8 1.8 0 1 0 0-.01" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.800 12 21 12 21zM12 12a2.500 2.500 0 1 0 0-.01" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+      <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3l8 4.500v9L12 21l-8-4.500v-9zM4 7.500l8 4.500 8-4.500M12 12v9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="M4 12h13M13 7l5 5-5 5M20 4v16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.500-3 8-7 10-4-2-7-5.500-7-10V6zM8.500 12l2.500 2.500 4.500-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-.01M4 20c1-4 4-6 8-6s7 2 8 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><path d="M11 18a7 7 0 1 0 0-.01M16.500 16.500L21 21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-hand" viewBox="0 0 24 24"><path d="M4 8h16v10H4zM8 8V5h8v3M4 13h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24"><path d="M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 18h2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 13h6l-1 8 8-10h-6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar">
+    <div class="container navbar__inner">
+      <a href="#beranda" class="brand" aria-label="Muatan Balik – beranda">
+        <span class="brand__logo"><svg class="icon"><use href="#i-truck"/></svg></span>
+        <span class="brand__name">Muatan Balik</span>
+      </a>
+
+      <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-label="Buka menu">
+      <label for="menu-toggle" class="menu-btn" aria-hidden="true"><span></span></label>
+
+      <nav class="nav" aria-label="Navigasi utama">
+        <a href="#beranda">Beranda</a>
+        <a href="#fitur">Fitur</a>
+        <a href="#kontak">Kontak</a>
+        <a href="#" class="btn btn--ghost">Masuk</a>
+        <a href="#" class="btn btn--primary">Daftar</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="beranda">
+      <div class="container hero__inner">
+        <div class="hero__text">
+          <h1>Pulang tidak lagi kosong.</h1>
+          <p>Temukan muatan balik yang cocok dengan truk dan rute pulang Anda. Berat, dimensi, dan jenis unit dicek otomatis sebelum Anda menawar.</p>
+        </div>
+
+        <div class="card" aria-label="Aksi cepat">
+          <input type="radio" name="tab" id="tab-cari" checked>
+          <input type="radio" name="tab" id="tab-lacak">
+
+          <div class="tabs" role="tablist">
+            <label for="tab-cari" role="tab">Cari Muatan</label>
+            <label for="tab-lacak" role="tab">Lacak Kiriman</label>
+          </div>
+
+          <form class="panel panel--cari" action="#" onsubmit="return false">
+            <label class="field">
+              <svg class="icon field__icon field__icon--start"><use href="#i-pin"/></svg>
+              <span class="sr-only">Lokasi sekarang</span>
+              <input type="text" placeholder="Lokasi sekarang" autocomplete="off">
+            </label>
+            <label class="field">
+              <svg class="icon field__icon field__icon--end"><use href="#i-back"/></svg>
+              <span class="sr-only">Kota pulang</span>
+              <input type="text" placeholder="Kota pulang" autocomplete="off">
+            </label>
+            <button type="submit" class="btn btn--primary btn--block">Cari Muatan Balik</button>
+          </form>
+
+          <form class="panel panel--lacak" action="#" onsubmit="return false">
+            <label class="field">
+              <svg class="icon field__icon field__icon--start"><use href="#i-box"/></svg>
+              <span class="sr-only">Nomor pengiriman</span>
+              <input type="text" placeholder="Masukkan nomor pengiriman" autocomplete="off">
+            </label>
+            <button type="submit" class="btn btn--primary btn--block">Lacak Pengiriman</button>
+          </form>
+        </div>
+
+        <ul class="quick" aria-label="Aksi cepat lainnya">
+          <li><a href="#"><span class="quick__icon"><svg class="icon"><use href="#i-pin"/></svg></span>Muatan Sekitar</a></li>
+          <li><a href="#"><span class="quick__icon"><svg class="icon"><use href="#i-box"/></svg></span>Posting Muatan</a></li>
+          <li><a href="#"><span class="quick__icon"><svg class="icon"><use href="#i-truck"/></svg></span>Profil Armada</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== FITUR UTAMA ===== -->
+    <section class="section" id="fitur">
+      <div class="container">
+        <header class="section__head">
+          <h2>Fitur utama</h2>
+          <p>Dibuat untuk sopir dan pemilik truk kelas berat, serta customer yang mengirim muatan proyek.</p>
+        </header>
+
+        <div class="features">
+          <article class="feature">
+            <span class="feature__icon"><svg class="icon"><use href="#i-user"/></svg></span>
+            <h3>Masuk sesuai peran</h3>
+            <p>Customer, Sopir, dan Admin punya akses sendiri. Akun sopir dan unitnya diverifikasi admin.</p>
+          </article>
+          <article class="feature">
+            <span class="feature__icon"><svg class="icon"><use href="#i-truck"/></svg></span>
+            <h3>Profil armada</h3>
+            <p>Simpan jenis unit, plat nomor, kapasitas maksimal (ton), dan dimensi bak.</p>
+          </article>
+          <article class="feature">
+            <span class="feature__icon"><svg class="icon"><use href="#i-box"/></svg></span>
+            <h3>Posting muatan</h3>
+            <p>Isi jenis muatan, berat, dimensi, asal, tujuan, jadwal muat, jenis unit, dan harga tawaran.</p>
+          </article>
+          <article class="feature">
+            <span class="feature__icon"><svg class="icon"><use href="#i-search"/></svg></span>
+            <h3>Cari muatan terdekat</h3>
+            <p>Muatan dalam radius tertentu diurutkan dari jarak terdekat dengan rumus Haversine.</p>
+          </article>
+          <article class="feature">
+            <span class="feature__icon"><svg class="icon"><use href="#i-back"/></svg></span>
+            <h3>Mode muatan balik</h3>
+            <p>Isi lokasi sekarang dan kota pulang. Muatan yang asalnya dekat Anda dan tujuannya searah pulang akan muncul.</p>
+          </article>
+          <article class="feature">
+            <span class="feature__icon"><svg class="icon"><use href="#i-check"/></svg></span>
+            <h3>Cek kecocokan otomatis</h3>
+            <p>Berat, dimensi, dan jenis unit dicocokkan. Muatan yang tidak sesuai ditandai dan tidak bisa ditawar.</p>
+          </article>
+          <article class="feature">
+            <span class="feature__icon"><svg class="icon"><use href="#i-hand"/></svg></span>
+            <h3>Penawaran dan status</h3>
+            <p>Sopir menawar, customer memilih satu sopir, lalu sopir memperbarui status sampai muatan tiba.</p>
+          </article>
+          <article class="feature">
+            <span class="feature__icon"><svg class="icon"><use href="#i-phone"/></svg></span>
+            <h3>Ringan di HP</h3>
+            <p>Pasang di layar utama. Muatan terakhir tetap tampil saat sinyal lemah, dan muatan baru masuk langsung.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== AJAKAN BERTINDAK ===== -->
+    <section class="cta">
+      <div class="container cta__inner">
+        <div>
+          <h2>Siap cari muatan untuk perjalanan pulang?</h2>
+          <p>Daftar sebagai sopir atau customer dan mulai dalam beberapa menit.</p>
+        </div>
+        <a href="#" class="btn btn--light">Daftar Sekarang</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" id="kontak">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="#beranda" class="brand brand--light">
+          <span class="brand__logo"><svg class="icon"><use href="#i-truck"/></svg></span>
+          <span class="brand__name">Muatan Balik</span>
+        </a>
+        <p>Pencarian muatan balik untuk truk kelas berat.</p>
+      </div>
+
+      <nav class="footer__col" aria-label="Menu">
+        <h4>Menu</h4>
+        <a href="#beranda">Beranda</a>
+        <a href="#fitur">Fitur</a>
+        <a href="#">Masuk</a>
+        <a href="#">Daftar</a>
+      </nav>
+
+      <div class="footer__col">
+        <h4>Kontak</h4>
+        <a href="mailto:halo@contoh.id">halo@contoh.id</a>
+        <a href="tel:+620000000000">+62 000 0000 0000</a>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <small>&copy; 2026 Muatan Balik. Proyek mata kuliah Konstruksi dan Rekayasa Perangkat Lunak.</small>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
