@@ -3,12 +3,16 @@
    Bergantung pada: supabase-config.js (variabel global `supabaseClient`). */
 
 /* ---------- Konfigurasi ---------- */
+/* Semua rute ditulis relatif ke ROOT proyek (folder tempat index.html berada),
+   lalu diubah jadi alamat penuh. Jadi pengalihan benar dari halaman di root maupun di html/. */
+const APP_ROOT = new URL('../', (document.currentScript && document.currentScript.src) || window.location.href).href;
 const ROUTES = {
   home: 'index.html',
-  customer: 'dashboard.html',
-  sopir: 'dashboard.html',   // sopir yang belum diverifikasi juga ke sini (untuk melengkapi profil armada)
-  admin: 'admin.html',
+  customer: 'html/dashboard.html',
+  sopir: 'html/dashboard.html',   // sopir yang belum diverifikasi juga ke sini (untuk melengkapi profil armada)
+  admin: 'html/admin.html',
 };
+const urlHalaman = (route) => new URL(route, APP_ROOT).href;
 const ROLE_PENDAFTARAN = ['customer', 'sopir']; // admin TIDAK bisa daftar sendiri
 
 /* ---------- Pesan error (bahasa Indonesia) ---------- */
@@ -45,7 +49,7 @@ function routeFor(profile) {
 }
 
 function redirectByRole(profile) {
-  window.location.href = routeFor(profile);
+  window.location.href = urlHalaman(routeFor(profile));
 }
 
 /* ---------- Registrasi, login, logout ---------- */
@@ -78,7 +82,7 @@ async function loginUser(email, password) {
 
 async function logoutUser() {
   await supabaseClient.auth.signOut();
-  window.location.href = ROUTES.home;
+  window.location.href = urlHalaman(ROUTES.home);
 }
 
 /* ---------- Penjaga halaman ----------
@@ -91,8 +95,8 @@ async function requireRole(allowedRoles) {
   let profile = null;
   try { profile = await getCurrentProfile(); } catch (e) { console.error(e); }
 
-  if (!profile) { window.location.replace(ROUTES.home); return null; }
-  if (!allowedRoles.includes(profile.role)) { window.location.replace(routeFor(profile)); return null; }
+  if (!profile) { window.location.replace(urlHalaman(ROUTES.home)); return null; }
+  if (!allowedRoles.includes(profile.role)) { window.location.replace(urlHalaman(routeFor(profile))); return null; }
   return profile;
 }
 
