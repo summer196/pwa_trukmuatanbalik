@@ -94,6 +94,7 @@ async function loginUser(email, password) {
 
 async function logoutUser() {
   if (supabaseClient) await supabaseClient.auth.signOut();
+  try { Object.keys(localStorage).filter((k) => k.startsWith('muatanku:')).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* abaikan */ }
   // Hapus data pengguna yang tersimpan service worker (cache REST) agar tidak terbaca pengguna berikutnya di perangkat yang sama
   if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({ type: 'BERSIHKAN_CACHE_API' });
   window.location.href = urlHalaman(ROUTES.home);

@@ -57,7 +57,7 @@
 .dash .btn--primary[disabled] { background: var(--muted); cursor: not-allowed; }
 
 /* Admin */
-.dash-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 12px; padding: 4px; background: var(--blue-50); border-radius: var(--radius-sm); }
+.dash-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin-bottom: 12px; padding: 4px; background: var(--blue-50); border-radius: var(--radius-sm); }
 .dash-tabs button { min-height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-weight: 700; font-size: .9rem; cursor: pointer; }
 .dash-tabs button[aria-selected="true"] { background: var(--white); color: var(--blue-800); box-shadow: 0 1px 4px rgba(7, 34, 79, .15); }
 .dash-sub { margin-top: 8px; font-size: 1rem; color: var(--blue-950); }
@@ -71,3 +71,16 @@
 .peta-popup { display: grid; gap: 4px; min-width: 190px; font-family: var(--font); }
 .peta-popup__alasan { color: #b42318; font-size: .9rem; }
 @media (min-width: 960px) { .peta { height: 460px; } }
+
+/* Dasbor bertab, dialog, riwayat, langkah status */
+.dash-panel { display: grid; gap: 16px; }
+.dash-main > #app > .dash-tabs { margin-bottom: 16px; background: var(--white); border: 1px solid var(--line); }
+.dash-dialog { width: min(380px, calc(100% - 24px)); padding: 20px; border: 0; border-radius: var(--radius-lg); box-shadow: var(--shadow); color: var(--ink); }
+.dash-dialog::backdrop { background: rgba(7, 34, 79, .6); }
+.dash-dialog h2 { font-size: 1.2rem; color: var(--blue-950); }
+.dash-details { margin-top: 6px; }
+.dash-details summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--blue-800); }
+.dash-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 4px; }
+.dash-step { padding: 3px 10px; border-radius: 999px; font-size: .8rem; background: var(--blue-50); color: var(--muted); }
+.dash-step--on { background: var(--blue-600); color: var(--white); font-weight: 700; }
+.dash-item a { color: var(--blue-800); font-weight: 700; }

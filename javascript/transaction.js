@@ -90,11 +90,12 @@ const Transaksi = (() => {
 
   /* ---------- Realtime ---------- */
   /** Mengembalikan fungsi untuk berhenti berlangganan. RLS tetap berlaku: tiap pengguna hanya menerima data yang boleh dilihatnya. */
-  function berlangganan({ onMuatanBaru, onPenawaranBaru, onPengirimanBerubah } = {}) {
+  function berlangganan({ onMuatanBaru, onPenawaranBaru, onPenawaranBerubah, onPengirimanBerubah } = {}) {
     const kanal = supabaseClient.channel('muatanku-' + Math.random().toString(36).slice(2));
     const pasang = (tabel, event, fn) => fn && kanal.on('postgres_changes', { event, schema: 'public', table: tabel }, (p) => fn(p.new, p.old));
     pasang('muatan', 'INSERT', onMuatanBaru);
     pasang('penawaran', 'INSERT', onPenawaranBaru);
+    pasang('penawaran', 'UPDATE', onPenawaranBerubah);
     pasang('pengiriman', '*', onPengirimanBerubah);
     kanal.subscribe();
     return () => supabaseClient.removeChannel(kanal);

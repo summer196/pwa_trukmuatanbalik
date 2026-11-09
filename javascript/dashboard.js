@@ -40,6 +40,8 @@ function badge(text, tone) { return el('span', { class: `dash-badge dash-badge--
 const rupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 const tanggal = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 const hariIni = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD (waktu lokal)
+const waktuLokal = (iso) => new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+const kosong = (teks) => el('p', { class: 'dash-empty' }, teks);
 
 function pesanDb(error) {
   if (error && error.code === '23505') return 'Data sudah terdaftar (plat nomor tidak boleh sama).';
@@ -80,6 +82,67 @@ function lokasiField(prefix, label) {
     el('div', { class: 'dash-loc' }, nama, cari), info, lat, lon);
 }
 
+/* ---------- Panel bertab (dipakai dasbor sopir dan customer) ----------
+   definisi: { kunci: { label, panel: (ctx) => ({ el, setelahTampil?, hancurkan? }) } }
+   ctx.bus dikosongkan tiap pindah tab; panel mengisinya untuk menerima kabar realtime. */
+function pasangPanelTab(root, definisi, awal, ctx) {
+  let sekarang = null;
+  const konten = el('div', { class: 'dash-panel' });
+  const tabs = el('div', { class: 'dash-tabs', role: 'tablist' },
+    Object.entries(definisi).map(([k, d]) => el('button', { type: 'button', role: 'tab', 'data-tab': k, onclick: () => buka(k) }, d.label)));
+  root.replaceChildren(tabs, konten);
+
+  function buka(k) {
+    if (sekarang && sekarang.hancurkan) sekarang.hancurkan();
+    Object.keys(ctx.bus).forEach((x) => delete ctx.bus[x]);
+    tabs.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === k)));
+    sekarang = definisi[k].panel(ctx);
+    konten.replaceChildren(sekarang.el);
+    if (sekarang.setelahTampil) sekarang.setelahTampil();
+  }
+  buka(awal);
+}
+
+/* ---------- Dialog isian angka (pengganti prompt) -> Promise<number|null> ---------- */
+function mintaAngka({ judul, label, nilai = '', min = '0', step = '1000' }) {
+  return new Promise((selesai) => {
+    const isi = input('nilai', 'number', { required: true, min, step, inputmode: 'numeric', value: String(nilai) });
+    const dlg = el('dialog', { class: 'dash-dialog', 'aria-label': judul });
+    dlg.append(el('form', { method: 'dialog', class: 'dash-form' },
+      el('h2', {}, judul), field(label, isi),
+      el('div', { class: 'dash-actions' },
+        el('button', { type: 'submit', value: 'kirim', class: 'btn btn--primary dash-btn-sm' }, 'Kirim'),
+        el('button', { type: 'button', class: 'btn btn--ghost dash-btn-sm', onclick: () => dlg.close('batal') }, 'Batal'))));
+    dlg.addEventListener('close', () => {
+      const v = dlg.returnValue === 'kirim' ? Number(isi.value) : null;   // Esc/Batal -> null
+      dlg.remove(); selesai(Number.isFinite(v) ? v : null);
+    });
+    document.body.append(dlg); dlg.showModal(); isi.focus();
+  });
+}
+
+/* ---------- Riwayat status pengiriman (dimuat saat dibuka) ---------- */
+function detailRiwayat(pengirimanId) {
+  const isi = el('div', { class: 'dash-meta' });
+  const det = el('details', { class: 'dash-details' }, el('summary', {}, 'Riwayat status'), isi);
+  det.addEventListener('toggle', async () => {
+    if (!det.open || isi.dataset.dimuat) return;
+    isi.dataset.dimuat = '1';
+    const r = await Transaksi.riwayatStatus(pengirimanId);
+    isi.replaceChildren(...(r.ok
+      ? r.data.map((l) => el('p', {}, `${waktuLokal(l.waktu)}: ${Transaksi.LABEL_STATUS[l.status] || l.status}${l.catatan ? ` (${l.catatan})` : ''}`))
+      : [el('p', {}, r.message)]));
+  });
+  return det;
+}
+
+/* Langkah-langkah status (yang sudah dilewati ditebalkan) */
+function langkahStatus(status) {
+  const sekarang = Transaksi.URUTAN.indexOf(status);
+  return el('div', { class: 'dash-steps' }, Transaksi.URUTAN.map((s, i) =>
+    el('span', { class: `dash-step${i <= sekarang ? ' dash-step--on' : ''}` }, Transaksi.LABEL_STATUS[s])));
+}
+
 /* ---------- Bootstrap ---------- */
 async function initDashboard() {
   const profile = await requireRole(['customer', 'sopir']); // admin diarahkan ke halamannya sendiri
@@ -88,7 +151,7 @@ async function initDashboard() {
   const isSopir = profile.role === 'sopir';
   document.getElementById('user-name').textContent = profile.nama || 'Pengguna';
   document.getElementById('user-role').textContent = isSopir ? 'Sopir' : 'Customer';
-  document.getElementById('dash-title').textContent = isSopir ? 'Profil Armada' : 'Posting Muatan';
+  document.getElementById('dash-title').textContent = isSopir ? 'Dasbor Sopir' : 'Dasbor Customer';
   document.getElementById('btn-logout').addEventListener('click', logoutUser);
 
   const banner = document.getElementById('status-banner');
