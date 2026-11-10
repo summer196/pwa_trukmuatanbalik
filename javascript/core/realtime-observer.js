@@ -2,6 +2,12 @@
    Pola Observer untuk pembaruan muatan baru secara realtime (SRS Subbab 4.4.3 & FR-15).
 */
 
+// Dependensi dimuat sendiri agar filter radius tetap jalan di Node (CommonJS) maupun di browser.
+// Nama konstanta unik karena skrip klasik berbagi satu lingkup global.
+const HaversineDiObserver = typeof HaversineCalculator !== 'undefined'
+  ? HaversineCalculator
+  : (typeof require !== 'undefined' ? require('./haversine.js').HaversineCalculator : null);
+
 class RealtimeObserver {
   /**
    * @param {Object} [client] Supabase client
@@ -38,13 +44,13 @@ class RealtimeObserver {
         if (!muatanBaru) return;
 
         // Hitung jarak jika lokasi sopir tersedia
-        if (lokasiSopir && typeof HaversineCalculator !== 'undefined') {
+        if (lokasiSopir && HaversineDiObserver) {
           const asalLat = muatanBaru.asal_lat ?? muatanBaru.asalLat;
           const asalLon = muatanBaru.asal_lon ?? muatanBaru.asalLon;
 
           if (asalLat != null && asalLon != null) {
             try {
-              const jarak = HaversineCalculator.jarakKm(lokasiSopir.lat, lokasiSopir.lon, asalLat, asalLon);
+              const jarak = HaversineDiObserver.jarakKm(lokasiSopir.lat, lokasiSopir.lon, asalLat, asalLon);
               muatanBaru.jarakKm = jarak;
               if (jarak > radiusKm) {
                 // Di luar radius aktif sopir, abaikan

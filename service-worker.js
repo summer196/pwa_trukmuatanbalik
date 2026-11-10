@@ -9,7 +9,7 @@
    - Tile peta OpenStreetMap                   : "cache dulu", dibatasi jumlahnya.
    - Auth, realtime, pencarian lokasi, dan semua request non-GET : tidak disentuh (langsung ke jaringan). */
 
-const VERSI = 'v7';
+const VERSI = 'v8';
 const CACHE_SHELL = `muatanku-shell-${VERSI}`;
 const CACHE_ASET = `muatanku-aset-${VERSI}`;
 const CACHE_API = `muatanku-api-${VERSI}`;
@@ -20,7 +20,7 @@ const BATAS_PETA = 150;           // jumlah tile maksimum yang disimpan
 const BATAS_TUNGGU_MS = 4000;     // lewat ini dianggap sinyal lemah -> pakai cache
 
 const SHELL = [
-  './', 'index.html', 'offline.html', 'style.css', 'manifest.json',
+  './', 'index.html', 'html/offline.html', 'style.css', 'manifest.json',
   'css/auth.css', 'css/dashboard.css',
   'html/dashboard.html', 'html/admin.html',
   'javascript/supabase-config.js', 'javascript/auth.js', 'javascript/pwa.js',
@@ -97,12 +97,12 @@ async function jaringanDulu(req, namaCache) {
   return Promise.race([jaringan.catch(() => cadangan), habisWaktu]);
 }
 
-/** Halaman: jaringan dulu; sinyal lemah/offline -> halaman tersimpan -> offline.html. */
+/** Halaman: jaringan dulu; sinyal lemah/offline -> halaman tersimpan -> html/offline.html. */
 async function navigasi(req) {
   const cache = await caches.open(CACHE_SHELL);
   const cadangan = await cache.match(req, { ignoreSearch: true });
   const jaringan = fetch(req).then((res) => { if (ok(res)) cache.put(req, res.clone()); return res; });
-  if (!cadangan) return jaringan.catch(async () => (await cache.match('offline.html')) || Response.error());
+  if (!cadangan) return jaringan.catch(async () => (await cache.match('html/offline.html')) || Response.error());
   const habisWaktu = new Promise((r) => setTimeout(() => r(cadangan), BATAS_TUNGGU_MS));
   return Promise.race([jaringan.catch(() => cadangan), habisWaktu]);
 }

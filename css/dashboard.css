@@ -59,8 +59,8 @@
 .dash .btn--primary[disabled] { background: var(--muted); cursor: not-allowed; }
 
 /* Admin */
-.dash-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin-bottom: 12px; padding: 4px; background: var(--blue-50); border-radius: var(--radius-sm); }
-.dash-tabs button { min-height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-weight: 700; font-size: .9rem; cursor: pointer; }
+.dash-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin-bottom: 12px; padding: 4px; background: var(--blue-50); border-radius: var(--radius-sm); max-width: 100%; overflow-x: auto; scrollbar-width: thin; }
+.dash-tabs button { white-space: nowrap; padding-inline: 12px; min-height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-weight: 700; font-size: .9rem; cursor: pointer; }
 .dash-tabs button[aria-selected="true"] { background: var(--white); color: var(--blue-800); box-shadow: 0 1px 4px rgba(7, 34, 79, .15); }
 .dash-sub { margin-top: 8px; font-size: 1rem; color: var(--blue-950); }
 .dash-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
