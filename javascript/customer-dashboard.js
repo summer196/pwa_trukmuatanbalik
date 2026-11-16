@@ -61,7 +61,7 @@ function panelMuatan({ profile, bus }) {
         type: 'button', class: 'btn btn--primary dash-btn-sm',
         onclick: async () => {
           if (!confirm(`Pilih ${w.sopir ? w.sopir.nama : 'sopir ini'} (${rupiah(w.harga)})? Penawaran lain akan ditolak.`)) return;
-          const p = await Transaksi.pilihPenawaran(w.id);
+          const p = await new Customer(profile).pilihSopir(w.id);   // objek domain Customer
           setMsg(msg, p.ok ? 'Sopir dipilih. Pantau perjalanannya di tab Pengiriman.' : p.message, p.ok ? 'ok' : 'error');
           muatDaftar();
         },

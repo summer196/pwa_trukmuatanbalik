@@ -6,13 +6,21 @@ const MuatanRepoBaseSupa = typeof MuatanRepository !== 'undefined'
   ? MuatanRepository
   : (typeof require !== 'undefined' ? require('./muatan-repo-base.js').MuatanRepository : class {});
 
+// Dependensi dimuat sendiri agar penyaringan kotak lintang/bujur juga jalan di Node (CommonJS).
+const HaversineDiRepoSupa = typeof HaversineCalculator !== 'undefined'
+  ? HaversineCalculator
+  : (typeof require !== 'undefined' ? require('../haversine.js').HaversineCalculator : null);
+
 class SupabaseMuatanRepository extends MuatanRepoBaseSupa {
   /**
    * @param {Object} client Supabase client instance
+   * @param {number} [timeoutMs] Batas tunggu pengambilan data. Pustaka Supabase mencoba ulang sendiri saat jaringan
+   *   gagal (sekitar 7 detik); batas ini memutus lebih awal agar aplikasi segera memakai hasil terakhir dari perangkat.
    */
-  constructor(client = (typeof supabaseClient !== 'undefined' ? supabaseClient : null)) {
+  constructor(client = (typeof supabaseClient !== 'undefined' ? supabaseClient : null), timeoutMs = 5000) {
     super();
     this.client = client;
+    this.timeoutMs = timeoutMs;
   }
 
   async ambilSemuaAktif(pusat = null, radiusKm = 50) {
@@ -23,10 +31,14 @@ class SupabaseMuatanRepository extends MuatanRepoBaseSupa {
       .select('*')
       .or('status.eq.terbuka,status.eq.tersedia');
 
-    if (pusat && typeof HaversineCalculator !== 'undefined' && HaversineCalculator.titikValid(pusat)) {
-      const k = HaversineCalculator.kotakBatas(pusat.lat, pusat.lon, radiusKm);
+    if (pusat && HaversineDiRepoSupa && HaversineDiRepoSupa.titikValid(pusat)) {
+      const k = HaversineDiRepoSupa.kotakBatas(pusat.lat, pusat.lon, radiusKm);
       q = q.gte('asal_lat', k.latMin).lte('asal_lat', k.latMax)
            .gte('asal_lon', k.lonMin).lte('asal_lon', k.lonMax);
+    }
+
+    if (this.timeoutMs > 0 && typeof AbortSignal !== 'undefined' && AbortSignal.timeout) {
+      q = q.abortSignal(AbortSignal.timeout(this.timeoutMs));
     }
 
     const { data, error } = await q;

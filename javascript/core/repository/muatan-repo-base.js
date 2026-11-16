@@ -6,9 +6,12 @@
 class MuatanRepository {
   /**
    * Mengambil semua muatan yang berstatus aktif/tersedia.
+   * @param {{lat:number, lon:number}|null} [pusat] Jika diberikan, implementasi boleh menyaring kasar
+   *   di sisi data (kotak lintang/bujur) sebelum Haversine dihitung oleh layanan.
+   * @param {number} [radiusKm]
    * @returns {Promise<Array<Object>>}
    */
-  async ambilSemuaAktif() {
+  async ambilSemuaAktif(pusat = null, radiusKm = 50) {
     throw new Error('Metode ambilSemuaAktif() harus diimplementasikan.');
   }
 

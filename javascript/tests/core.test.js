@@ -114,7 +114,8 @@ test('LSP: tiga implementasi MuatanRepository saling menggantikan dengan hasil s
   const memori = new InMemoryMuatanRepository(data);
   global.localStorage = { _d: {}, getItem(k) { return this._d[k] ?? null; }, setItem(k, x) { this._d[k] = x; } };
   const cache = new CacheMuatanRepository(); for (const m of data) await cache.simpan(m);
-  const supabase = new SupabaseMuatanRepository({ from: () => ({ select: () => ({ or: () => Promise.resolve({ data, error: null }) }) }) });
+  const rantai = { select() { return rantai; }, or() { return rantai; }, gte() { return rantai; }, lte() { return rantai; }, abortSignal() { return rantai; }, then(res) { return Promise.resolve({ data, error: null }).then(res); } };
+  const supabase = new SupabaseMuatanRepository({ from: () => rantai });
   const hasil = [];
   for (const repo of [memori, cache, supabase]) hasil.push((await new PencarianMuatanService(repo).cariTerdekat({ lat: SBY[0], lon: SBY[1] }, 50)).map((m) => m.id));
   assert.deepEqual(hasil[0], ['gresik', 'sidoarjo']); assert.deepEqual(hasil[1], hasil[0]); assert.deepEqual(hasil[2], hasil[0]);
@@ -141,4 +142,71 @@ test('Observer (FR-15): muatan baru dalam radius diteruskan beserta validasi; di
 });
 test('Pewarisan domain: Sopir, Customer, Admin adalah Pengguna', () => {
   for (const K of [Sopir, Customer, Admin]) assert.ok(new K({ id: 'x', nama: 'n' }) instanceof Pengguna, K.name);
+});
+
+/* ===================== Penyatuan aturan dan penyambungan lapisan (revisi) ===================== */
+test('Aturan unit: kecocokan persis; "tronton" tidak lagi cocok dengan "Tronton Bak" (sama dengan trigger database)', () => {
+  const m = muatan({ jenisUnitDibutuhkan: ['Tronton Bak'] });
+  assert.equal(v.validasi(m, { ...armada, jenisUnit: ' tronton bak ' }).kompatibel, true, 'normalisasi huruf/spasi');
+  assert.equal(v.validasi(m, { ...armada, jenisUnit: 'tronton' }).kompatibel, false, 'pencocokan sebagian harus ditolak');
+  assert.equal(v.validasi(muatan({ jenisUnitDibutuhkan: ['tronton'] }), { ...armada, jenisUnit: 'Tronton Bak' }).kompatibel, false);
+});
+test('Layanan meneruskan pusat dan radius ke repository agar basis data menyaring kasar (TC-22)', async () => {
+  const dipanggil = [];
+  const repo = new InMemoryMuatanRepository([aktif('gresik', GRESIK)]);
+  const asli = repo.ambilSemuaAktif.bind(repo); repo.ambilSemuaAktif = (...a) => { dipanggil.push(a); return asli(...a); };
+  const s = new PencarianMuatanService(repo);
+  await s.cariTerdekat({ lat: SBY[0], lon: SBY[1] }, 30);
+  await s.cariMuatanBalik({ lat: SBY[0], lon: SBY[1] }, { lat: JKT[0], lon: JKT[1] }, 40, 80);
+  assert.deepEqual(dipanggil[0], [{ lat: SBY[0], lon: SBY[1] }, 30]);
+  assert.deepEqual(dipanggil[1], [{ lat: SBY[0], lon: SBY[1] }, 40]);
+});
+test('Domain: Sopir.cariMuatan memakai layanan dan armada miliknya (alur Gambar 4.3)', async () => {
+  const { Armada } = require('../domain/Armada.js');
+  const repo = new InMemoryMuatanRepository([
+    { ...aktif('ok', GRESIK), beratTon: 20, panjangM: 6, lebarM: 2, tinggiM: 2, jenisUnitDibutuhkan: ['flatbed'] },
+    { ...aktif('berat', SIDOARJO), beratTon: 40, panjangM: 6, lebarM: 2, tinggiM: 2, jenisUnitDibutuhkan: ['flatbed'] },
+  ]);
+  const sopir = new Sopir({ id: 's1', nama: 'Budi' });
+  sopir.kelolaArmada([new Armada({ ...armada, statusVerifikasi: 'verified' })]);
+  const hasil = await sopir.cariMuatan(new PencarianMuatanService(repo), { lat: SBY[0], lon: SBY[1] }, 50);
+  assert.deepEqual(hasil.map((m) => [m.id, m.bisaTawar]), [['ok', true], ['berat', false]]);
+  await assert.rejects(() => sopir.cariMuatan({}, { lat: 0, lon: 0 }, 5), /PencarianService tidak valid/);
+});
+test('Observer mode muatan balik: tujuan terlalu jauh dari kota pulang diabaikan; skor dihitung', () => {
+  let handler = null; const diterima = [];
+  const klien = { channel: () => ({ on: (_e, _f, cb) => { handler = cb; return { subscribe() {} }; }, subscribe() {} }), removeChannel() {} };
+  new RealtimeObserver(klien).amatiMuatanBaru({
+    lokasiSopir: { lat: SBY[0], lon: SBY[1] }, radiusKm: 50, kotaPulang: { lat: JKT[0], lon: JKT[1] }, radiusTujuanKm: 50,
+    armada: [{ ...armada, statusVerifikasi: 'verified' }], validator: v, onMuatanBaru: (m) => diterima.push(m),
+  });
+  const dasar = { asal_lat: GRESIK[0], asal_lon: GRESIK[1], beratTon: 10, panjangM: 5, lebarM: 2, tinggiM: 2, jenisUnitDibutuhkan: ['flatbed'] };
+  handler({ new: { id: 'ke-jakarta', tujuan_lat: JKT[0], tujuan_lon: JKT[1], ...dasar } });
+  handler({ new: { id: 'ke-bandung', tujuan_lat: BDG[0], tujuan_lon: BDG[1], ...dasar } });
+  handler({ new: { id: 'terkunci', status: 'terkunci', tujuan_lat: JKT[0], tujuan_lon: JKT[1], ...dasar } });
+  assert.deepEqual(diterima.map((m) => m.id), ['ke-jakarta']);
+  assert.ok(diterima[0].skorKm > 0 && diterima[0].jarakTujuanKm === 0 && diterima[0].bisaTawar === true);
+});
+test('Domain Admin: pembaruan yang ditolak RLS (0 baris) dilaporkan, bukan dianggap sukses', async () => {
+  const klien = (baris) => ({ from: () => ({ update: () => ({ eq: () => ({ select: async () => ({ data: baris, error: null }) }) }) }) });
+  const admin = new Admin({ id: 'a1' });
+  assert.deepEqual(await admin.verifikasiAkun('s1', 'verified', klien([{ id: 's1', status_verifikasi: 'verified' }])), { id: 's1', status_verifikasi: 'verified' });
+  await assert.rejects(() => admin.verifikasiUnit('x1', 'verified', klien([])), /Tidak ada data yang berubah/);
+});
+test('Regresi: Armada dari baris database (snake_case) mempertahankan status verifikasinya', () => {
+  const { Armada } = require('../domain/Armada.js');
+  const baris = { id: 'a1', jenis_unit: 'Tronton Bak', kapasitas_ton: 25, panjang_m: 9, lebar_m: 2.4, tinggi_m: 2.5 };
+  assert.equal(new Armada({ ...baris, status_verifikasi: 'verified' }).statusVerifikasi, 'verified');
+  assert.equal(new Armada({ ...baris, status_verifikasi: 'rejected' }).statusVerifikasi, 'rejected');
+  assert.equal(new Armada({ ...baris }).statusVerifikasi, 'pending', 'tanpa nilai: bawaan pending');
+  assert.equal(new Armada({ ...baris, statusVerifikasi: 'verified' }).isTerverifikasi(), true);
+});
+test('SupabaseMuatanRepository: batas tunggu dipasang pada kueri (jaringan lambat tidak menggantung)', async () => {
+  let sinyalDipasang = null;
+  const q = { select() { return q; }, or() { return q; }, gte() { return q; }, lte() { return q; },
+              abortSignal(s) { sinyalDipasang = s; return q; }, then(res) { return Promise.resolve({ data: [], error: null }).then(res); } };
+  const repo = new SupabaseMuatanRepository({ from: () => q }, 1234);
+  await repo.ambilSemuaAktif({ lat: SBY[0], lon: SBY[1] }, 50);
+  assert.ok(sinyalDipasang && typeof sinyalDipasang.aborted === 'boolean');
+  assert.equal(repo.timeoutMs, 1234);
 });

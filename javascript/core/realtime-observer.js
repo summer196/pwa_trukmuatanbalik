@@ -18,16 +18,18 @@ class RealtimeObserver {
   }
 
   /**
-   * Mendaftar pengamat muatan baru dengan filter radius dan validasi otomatis.
+   * Mendaftar pengamat muatan baru dengan filter radius dan validasi otomatis (FR-15).
    * @param {Object} opsi
    * @param {Object} opsi.lokasiSopir { lat, lon }
-   * @param {number} opsi.radiusKm
+   * @param {number} opsi.radiusKm Radius titik muat
+   * @param {Object} [opsi.kotaPulang] { lat, lon }; jika ada, berlaku mode muatan balik
+   * @param {number} [opsi.radiusTujuanKm] Radius tujuan ke kota pulang (mode muatan balik)
    * @param {Array<Object>|Object} opsi.armada
    * @param {Object} [opsi.validator]
    * @param {Function} opsi.onMuatanBaru Callback saat ada muatan baru yang relevan
    * @returns {Function} Fungsi untuk berhenti berlangganan
    */
-  amatiMuatanBaru({ lokasiSopir, radiusKm = 50, armada, validator, onMuatanBaru }) {
+  amatiMuatanBaru({ lokasiSopir, radiusKm = 50, kotaPulang = null, radiusTujuanKm = 100, armada, validator, onMuatanBaru }) {
     if (!this.client) {
       console.warn('RealtimeObserver: Supabase client belum tersedia.');
       return () => {};
@@ -43,26 +45,35 @@ class RealtimeObserver {
         const muatanBaru = payload.new;
         if (!muatanBaru) return;
 
-        // Hitung jarak jika lokasi sopir tersedia
-        if (lokasiSopir && HaversineDiObserver) {
-          const asalLat = muatanBaru.asal_lat ?? muatanBaru.asalLat;
-          const asalLon = muatanBaru.asal_lon ?? muatanBaru.asalLon;
+        // Hanya muatan aktif (status awal saat posting adalah 'terbuka')
+        const status = String(muatanBaru.status || 'terbuka').toLowerCase();
+        if (status !== 'terbuka' && status !== 'tersedia') return;
 
-          if (asalLat != null && asalLon != null) {
-            try {
-              const jarak = HaversineDiObserver.jarakKm(lokasiSopir.lat, lokasiSopir.lon, asalLat, asalLon);
-              muatanBaru.jarakKm = jarak;
-              if (jarak > radiusKm) {
-                // Di luar radius aktif sopir, abaikan
-                return;
-              }
-            } catch (err) {
-              console.warn('Gagal menghitung jarak muatan baru:', err);
+        // Saring berdasarkan radius titik muat, dan (mode muatan balik) radius tujuan ke kota pulang
+        if (lokasiSopir && HaversineDiObserver) {
+          try {
+            const dAsal = HaversineDiObserver.jarakKm(
+              lokasiSopir.lat, lokasiSopir.lon,
+              muatanBaru.asal_lat ?? muatanBaru.asalLat, muatanBaru.asal_lon ?? muatanBaru.asalLon);
+            if (!(dAsal <= radiusKm)) return;                    // di luar radius aktif sopir
+            muatanBaru.jarakKm = dAsal;
+            muatanBaru.jarakAsalKm = dAsal;
+
+            if (kotaPulang) {
+              const dTujuan = HaversineDiObserver.jarakKm(
+                kotaPulang.lat, kotaPulang.lon,
+                muatanBaru.tujuan_lat ?? muatanBaru.tujuanLat, muatanBaru.tujuan_lon ?? muatanBaru.tujuanLon);
+              if (!(dTujuan <= radiusTujuanKm)) return;          // tujuan terlalu jauh dari kota pulang
+              muatanBaru.jarakTujuanKm = dTujuan;
+              muatanBaru.skorKm = Math.round((dAsal + dTujuan) * 100) / 100;
             }
+          } catch (err) {
+            console.warn('RealtimeObserver: koordinat muatan baru tidak valid, diabaikan.', err);
+            return;
           }
         }
 
-        // Lakukan validasi kompatibilitas jika validator dan armada tersedia
+        // Validasi kompatibilitas jika validator dan armada tersedia
         if (validator && armada) {
           if (Array.isArray(armada) && typeof validator.validasiUntukSopir === 'function') {
             const v = validator.validasiUntukSopir(muatanBaru, armada);
@@ -71,6 +82,7 @@ class RealtimeObserver {
           } else if (typeof validator.validasi === 'function') {
             const v = validator.validasi(muatanBaru, armada);
             muatanBaru.hasilValidasi = v;
+            muatanBaru.kompatibilitas = { cocok: v.kompatibel, alasan: v.alasan };
             muatanBaru.bisaTawar = v.bolehTawar();
           }
         }

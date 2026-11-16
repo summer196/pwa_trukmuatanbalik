@@ -1,7 +1,7 @@
 /* transaction.js
    Penawaran dan status pengiriman: sopir menawar -> customer memilih -> sopir memperbarui status.
    Butuh: supabase-config.js (supabaseClient) dan api/schema-transaksi.sql sudah dijalankan.
-   Opsional: search-engine.js (cek kecocokan cepat sebelum penawaran dikirim).
+   Opsional: core/validator (cek kecocokan cepat sebelum penawaran dikirim).
    Aturan yang sebenarnya dijaga di database (trigger + RPC + RLS); validasi di sini hanya untuk respons cepat. */
 
 const Transaksi = (() => {
@@ -31,9 +31,9 @@ const Transaksi = (() => {
     const h = Number(harga);
     if (!Number.isFinite(h) || h < 0) return { ok: false, message: 'Harga tidak valid.' };
     if (armada.status_verifikasi !== 'verified') return { ok: false, message: 'Armada belum diverifikasi admin.' };
-    if (typeof SearchEngine !== 'undefined') {
-      const k = SearchEngine.cekKompatibilitas(muatan, armada);
-      if (!k.cocok) return { ok: false, message: k.alasan.join(' ') };
+    if (typeof KompatibilitasValidator !== 'undefined') {          // aturan tunggal di core/validator (sama dengan trigger database)
+      const hasil = new KompatibilitasValidator().validasi(muatan, armada);
+      if (!hasil.kompatibel) return { ok: false, message: hasil.alasan.join(' ') };
     }
     const { data, error } = await supabaseClient.from('penawaran')
       .insert({ muatan_id: muatan.id, armada_id: armada.id, harga: Math.round(h) }).select().single();

@@ -43,7 +43,30 @@
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="../javascript/dashboard.js"></script>
-  <script src="../javascript/search-engine.js"></script>
+  <!-- Lapisan inti (Bab IV): core/ lalu domain/. Urutan penting: kelas dasar dimuat sebelum turunannya. -->
+  <script src="../javascript/core/haversine.js"></script>
+  <script src="../javascript/core/validator/hasil-validasi.js"></script>
+  <script src="../javascript/core/validator/aturan-base.js"></script>
+  <script src="../javascript/core/validator/aturan-berat.js"></script>
+  <script src="../javascript/core/validator/aturan-dimensi.js"></script>
+  <script src="../javascript/core/validator/aturan-unit.js"></script>
+  <script src="../javascript/core/validator/validator.js"></script>
+  <script src="../javascript/core/repository/muatan-repo-base.js"></script>
+  <script src="../javascript/core/repository/in-memory-muatan-repo.js"></script>
+  <script src="../javascript/core/repository/cache-muatan-repo.js"></script>
+  <script src="../javascript/core/repository/supabase-muatan-repo.js"></script>
+  <script src="../javascript/core/pencarian-service.js"></script>
+  <script src="../javascript/core/realtime-observer.js"></script>
+  <script src="../javascript/domain/Pengguna.js"></script>
+  <script src="../javascript/domain/Sopir.js"></script>
+  <script src="../javascript/domain/Customer.js"></script>
+  <script src="../javascript/domain/Admin.js"></script>
+  <script src="../javascript/domain/Armada.js"></script>
+  <script src="../javascript/domain/Muatan.js"></script>
+  <script src="../javascript/domain/Penawaran.js"></script>
+  <script src="../javascript/domain/Pengiriman.js"></script>
+  <script src="../javascript/domain/LogStatus.js"></script>
+  <script src="../javascript/domain/RencanaPulang.js"></script>
   <script src="../javascript/transaction.js"></script>
   <script src="../javascript/map.js"></script>
   <script src="../javascript/driver-dashboard.js"></script>

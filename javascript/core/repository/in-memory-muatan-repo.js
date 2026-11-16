@@ -15,7 +15,7 @@ class InMemoryMuatanRepository extends MuatanRepoBaseInMemory {
     this.data = Array.isArray(data) ? [...data] : [];
   }
 
-  async ambilSemuaAktif() {
+  async ambilSemuaAktif(pusat = null, radiusKm = 50) {   // argumen diabaikan: data sudah di memori
     // Sesuai SRS: hanya muatan berstatus 'tersedia' atau 'terbuka' yang aktif
     return this.data.filter((m) => {
       const st = String(m.status || '').toLowerCase();

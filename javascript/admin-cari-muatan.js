@@ -1,6 +1,7 @@
 /* admin-cari-muatan.js
    Modul pencarian muatan balik dan muatan sekitar untuk admin.
-   Bergantung pada: supabase-config.js, auth.js, dashboard.js, search-engine.js, map.js */
+   Memakai PencarianMuatanService + SupabaseMuatanRepository dari core/ (tanpa validasi armada: admin hanya melihat).
+   Bergantung pada: supabase-config.js, auth.js, dashboard.js, core/*, map.js */
 
 function mountAdminCariMuatan(root, ctx) {
   const wadah = el('div', { class: 'admin-module dash-grid' });
@@ -8,6 +9,7 @@ function mountAdminCariMuatan(root, ctx) {
   const daftarEl = el('div', { class: 'dash-list' });
   const petaEl = el('div', { id: 'admin-peta', class: 'peta', hidden: typeof L === 'undefined' });
   let peta = null;
+  const layanan = new PencarianMuatanService(new SupabaseMuatanRepository(supabaseClient));
 
   const btnGps = el('button', { type: 'button', class: 'btn btn--ghost dash-btn-sm' }, 'Pakai lokasi GPS saya');
   const btnSekitar = el('button', { type: 'button', class: 'btn btn--primary' }, 'Cari Muatan Sekitar');
@@ -36,7 +38,7 @@ function mountAdminCariMuatan(root, ctx) {
 
   btnGps.addEventListener('click', async () => {
     try {
-      const p = await SearchEngine.ambilLokasiGPS();
+      const p = await ambilLokasiGPS();
       form.elements.sekarang_lat.value = p.lat.toFixed(6);
       form.elements.sekarang_lon.value = p.lon.toFixed(6);
       form.elements.sekarang_nama.value = 'Lokasi saat ini (GPS)';
@@ -48,8 +50,8 @@ function mountAdminCariMuatan(root, ctx) {
 
   function kartuHasil(m) {
     const jarak = m.jarakTujuanKm != null
-      ? `Titik muat ${SearchEngine.formatKm(m.jarakAsalKm)} dari Anda, tujuan ${SearchEngine.formatKm(m.jarakTujuanKm)} dari kota pulang`
-      : `${SearchEngine.formatKm(m.jarakKm)} dari Anda`;
+      ? `Titik muat ${formatKm(m.jarakAsalKm)} dari Anda, tujuan ${formatKm(m.jarakTujuanKm)} dari kota pulang`
+      : `${formatKm(m.jarakKm)} dari Anda`;
 
     return el('article', { class: 'dash-item' },
       el('div', { class: 'dash-item__head' },
@@ -84,13 +86,9 @@ function mountAdminCariMuatan(root, ctx) {
 
     setMsg(msg, 'Mencari muatan terbuka...', 'ok');
     try {
-      const muatanList = await SearchEngine.ambilMuatanTerbuka(lokasi, r);
-      let hasil = [];
-      if (mode === 'balik') {
-        hasil = SearchEngine.cariMuatanBalik(muatanList, lokasi, kotaPulang, { radiusAsalKm: r, radiusTujuanKm: r * 2 });
-      } else {
-        hasil = SearchEngine.cariMuatanTerdekat(muatanList, lokasi, { radiusKm: r });
-      }
+      const hasil = mode === 'balik'
+        ? await layanan.cariMuatanBalik(lokasi, kotaPulang, r, r * 2)
+        : await layanan.cariTerdekat(lokasi, r);
 
       if (peta) MapUI.tandaiLokasi(peta, { lat: Number(d.sekarang_lat), lon: Number(d.sekarang_lon) }, 'Titik Pencarian');
       tampilkan(hasil, `${hasil.length} muatan terbuka ditemukan.`);

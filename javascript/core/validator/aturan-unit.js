@@ -27,8 +27,9 @@ class AturanJenisUnit extends AturanBaseUnit {
       return 'Jenis unit tidak sesuai: data unit armada tidak lengkap.';
     }
 
-    // Periksa apakah unit armada termasuk dalam unit yang diizinkan muatan
-    const cocok = unitList.some((u) => u === unitArmada || unitArmada.includes(u) || u.includes(unitArmada));
+    // Kecocokan PERSIS (setelah trim dan huruf kecil), sama dengan trigger validasi_penawaran di database.
+    // Pencocokan sebagian dihapus: dengan includes(), armada "Tronton" ikut cocok untuk muatan "Tronton Bak".
+    const cocok = unitList.includes(unitArmada);
     if (cocok) {
       return null;
     }

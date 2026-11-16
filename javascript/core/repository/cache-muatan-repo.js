@@ -12,7 +12,7 @@ class CacheMuatanRepository extends MuatanRepoBaseCache {
     this.kunciStorage = kunciStorage;
   }
 
-  async ambilSemuaAktif() {
+  async ambilSemuaAktif(pusat = null, radiusKm = 50) {   // argumen diabaikan: data sudah di perangkat
     try {
       const dataStr = localStorage.getItem(this.kunciStorage);
       if (!dataStr) return [];

@@ -17,10 +17,10 @@ class Admin extends PenggunaBaseAdmin {
       .from('profiles')
       .update({ status_verifikasi: status })
       .eq('id', penggunaId)
-      .select('id, status_verifikasi')
-      .single();
+      .select('id, status_verifikasi');
     if (error) throw error;
-    return data;
+    if (!data || !data.length) throw new Error('Tidak ada data yang berubah. Pastikan izin admin aktif.');
+    return data[0];
   }
 
   async verifikasiUnit(armadaId, status = 'verified', supabase = (typeof supabaseClient !== 'undefined' ? supabaseClient : null)) {
@@ -29,10 +29,10 @@ class Admin extends PenggunaBaseAdmin {
       .from('armada')
       .update({ status_verifikasi: status })
       .eq('id', armadaId)
-      .select('id, status_verifikasi')
-      .single();
+      .select('id, status_verifikasi');
     if (error) throw error;
-    return data;
+    if (!data || !data.length) throw new Error('Tidak ada data yang berubah. Pastikan izin admin aktif.');
+    return data[0];
   }
 
   async pantauPengiriman(supabase = (typeof supabaseClient !== 'undefined' ? supabaseClient : null)) {

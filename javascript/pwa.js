@@ -8,7 +8,7 @@
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register(ROOT + 'service-worker.js', { scope: ROOT })
-        .then((reg) => reg.addEventListener('updatefound', () => {
+        .then((reg) => reg && reg.addEventListener('updatefound', () => {
           const baru = reg.installing;
           if (baru) baru.addEventListener('statechange', () => {
             if (baru.state === 'installed' && navigator.serviceWorker.controller) baru.postMessage({ type: 'SKIP_WAITING' });

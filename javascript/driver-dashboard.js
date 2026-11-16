@@ -1,5 +1,7 @@
 /* driver-dashboard.js - dasbor sopir dengan tiga tab: Cari muatan, Pengiriman, Armada.
-   Bergantung pada: supabase-config.js, auth.js, dashboard.js, search-engine.js, transaction.js, map.js (Leaflet) */
+   Memakai lapisan inti sesuai Bab IV: domain/ (Sopir, Armada), core/ (PencarianMuatanService, SupabaseMuatanRepository,
+   KompatibilitasValidator, RealtimeObserver), serta transaction.js dan map.js (Leaflet).
+   Bergantung pada: supabase-config.js, auth.js, dashboard.js, core/*, domain/*, transaction.js, map.js */
 
 const STATUS_ARMADA = {
   pending: ['Menunggu verifikasi', 'wait'],
@@ -10,13 +12,18 @@ const STATUS_PENAWARAN = { menunggu: ['Menunggu customer', 'wait'], dipilih: ['D
 
 function normalisasiPlat(s) { return s.toUpperCase().replace(/\s+/g, ' ').trim(); }
 
+async function ambilArmadaSaya() {          // RLS: sopir hanya menerima armadanya sendiri
+  const { data, error } = await supabaseClient.from('armada').select('*');
+  if (error) throw error;
+  return data || [];
+}
+
 function mountDriverDashboard(root, profile) {
   const terverifikasi = profile.status_verifikasi === 'verified';
   const ctx = { profile, terverifikasi, bus: {} };
 
   // Satu langganan realtime untuk seluruh dasbor; kabarnya diteruskan ke panel yang sedang aktif
   const berhenti = Transaksi.berlangganan({
-    onMuatanBaru: (m) => ctx.bus.muatanBaru && ctx.bus.muatanBaru(m),
     onPenawaranBerubah: () => ctx.bus.segarkan && ctx.bus.segarkan(),
     onPengirimanBerubah: () => ctx.bus.segarkan && ctx.bus.segarkan(),
   });
@@ -49,6 +56,13 @@ function panelCari({ profile, terverifikasi, bus }) {
   const petaEl = el('div', { id: 'peta', class: 'peta', hidden: typeof L === 'undefined' });
   let peta = null;
 
+  // Rangkaian objek sesuai Gambar 4.3: Sopir -> PencarianMuatanService -> MuatanRepository (+ validator Strategy)
+  const layanan = new PencarianMuatanService(new SupabaseMuatanRepository(supabaseClient));
+  const sopir = new Sopir(profile);
+  const observer = new RealtimeObserver(supabaseClient);
+  let berhentiAmati = () => {};
+  let hasilSekarang = [];
+
   const btnGps = el('button', { type: 'button', class: 'btn btn--ghost dash-btn-sm' }, 'Pakai lokasi GPS saya');
   const btnSekitar = el('button', { type: 'button', class: 'btn btn--primary' }, 'Cari muatan sekitar');
   const btnBalik = el('button', { type: 'button', class: 'btn btn--primary' }, 'Cari muatan balik');
@@ -69,8 +83,8 @@ function panelCari({ profile, terverifikasi, bus }) {
   /* --- tampilan --- */
   function kartuHasil(m) {
     const jarak = m.jarakTujuanKm != null
-      ? `Titik muat ${SearchEngine.formatKm(m.jarakAsalKm)} dari Anda, tujuan ${SearchEngine.formatKm(m.jarakTujuanKm)} dari kota pulang`
-      : `${SearchEngine.formatKm(m.jarakKm)} dari Anda`;
+      ? `Titik muat ${formatKm(m.jarakAsalKm)} dari Anda, tujuan ${formatKm(m.jarakTujuanKm)} dari kota pulang`
+      : `${formatKm(m.jarakKm)} dari Anda`;
     return el('article', { class: 'dash-item' },
       el('div', { class: 'dash-item__head' }, el('strong', {}, `${m.jenis}, ${m.berat_ton} ton`), badge(m.bisaTawar ? 'Cocok' : 'Tidak cocok', m.bisaTawar ? 'ok' : 'no')),
       el('p', {}, `${m.asal_nama} ke ${m.tujuan_nama}`),
@@ -84,6 +98,7 @@ function panelCari({ profile, terverifikasi, bus }) {
   }
 
   function tampilkan(hasil, teks, tone = 'ok') {
+    hasilSekarang = hasil;
     setMsg(msg, teks, tone);
     daftar.replaceChildren(...(hasil.length ? hasil.map(kartuHasil) : [kosong('Tidak ada muatan di radius ini.')]));
     if (peta) MapUI.tampilkanMuatan(peta, hasil, { onTawar: tawar });
@@ -94,14 +109,14 @@ function panelCari({ profile, terverifikasi, bus }) {
     const armada = m.kompatibilitas.armadaCocok[0];
     const harga = await mintaAngka({ judul: `Tawar: ${m.jenis}, ${m.berat_ton} ton`, label: 'Harga tawaran Anda (Rp)', nilai: Math.round(m.harga) });
     if (harga === null) return;
-    const r = await Transaksi.buatPenawaran({ muatan: m, armada, harga });
+    const r = await sopir.ajukanPenawaran(m, harga, armada);
     setMsg(msg, r.ok ? 'Penawaran terkirim. Pantau statusnya di tab Pengiriman.' : r.message, r.ok ? 'ok' : 'error');
   }
 
   /* --- pencarian --- */
   btnGps.addEventListener('click', async () => {
     try {
-      const p = await SearchEngine.ambilLokasiGPS();
+      const p = await ambilLokasiGPS();
       form.elements.sekarang_lat.value = p.lat.toFixed(6);
       form.elements.sekarang_lon.value = p.lon.toFixed(6);
       form.elements.sekarang_nama.value = 'Lokasi saat ini (GPS)';   // .value tidak memicu reset koordinat
@@ -119,9 +134,12 @@ function panelCari({ profile, terverifikasi, bus }) {
 
     setMsg(msg, 'Mencari...', 'ok');
     try {
-      const [muatanList, armadaList] = await Promise.all([SearchEngine.ambilMuatanTerbuka(lokasi, r), SearchEngine.ambilArmadaSaya()]);
-      const hasil = SearchEngine.cari({ mode, muatanList, armadaList, lokasi, kotaPulang, opsi: { radiusKm: r, radiusAsalKm: r, radiusTujuanKm: r * 2 } });
+      sopir.kelolaArmada((await ambilArmadaSaya()).map((a) => new Armada(a)));       // objek domain Armada
+      const hasil = mode === 'balik'
+        ? await sopir.cariMuatanBalik(layanan, lokasi, kotaPulang, r, r * 2)
+        : await sopir.cariMuatan(layanan, lokasi, r);
       simpan(mode, hasil);
+      amatiRealtime(mode, lokasi, kotaPulang, r);
       if (peta) MapUI.tandaiLokasi(peta, { lat: Number(d.sekarang_lat), lon: Number(d.sekarang_lon) });
       tampilkan(hasil, `${hasil.length} muatan ditemukan, diurutkan dari yang terdekat.`);
     } catch (err) {
@@ -133,7 +151,24 @@ function panelCari({ profile, terverifikasi, bus }) {
   btnSekitar.addEventListener('click', () => jalankan('sekitar'));
   btnBalik.addEventListener('click', () => jalankan('balik'));
 
-  bus.muatanBaru = () => setMsg(msg, 'Ada muatan baru diposting. Tekan cari lagi untuk memperbarui hasil.', 'ok');
+  /* FR-15 (Observer): muatan baru yang relevan langsung masuk ke daftar tanpa memuat ulang */
+  function amatiRealtime(mode, lokasi, kotaPulang, r) {
+    berhentiAmati();
+    berhentiAmati = observer.amatiMuatanBaru({
+      lokasiSopir: { lat: Number(lokasi.lat), lon: Number(lokasi.lon) },
+      radiusKm: r,
+      kotaPulang: mode === 'balik' ? { lat: Number(kotaPulang.lat), lon: Number(kotaPulang.lon) } : null,
+      radiusTujuanKm: r * 2,
+      armada: sopir.daftarArmada,
+      validator: layanan.validator,
+      onMuatanBaru: (m) => {
+        const urut = (a, b) => (a.skorKm ?? a.jarakKm) - (b.skorKm ?? b.jarakKm);
+        const gabung = [...hasilSekarang.filter((x) => x.id !== m.id), m].sort(urut);
+        simpan(mode, gabung);
+        tampilkan(gabung, `Muatan baru masuk: ${m.jenis}, ${m.berat_ton} ton (${m.asal_nama}).`);
+      },
+    });
+  }
 
   function prosesPencarianAwal() {
     const params = new URLSearchParams(window.location.search);
@@ -186,14 +221,15 @@ function panelCari({ profile, terverifikasi, bus }) {
         if (t) tampilkan(t.hasil, `Hasil pencarian terakhir (${waktuLokal(t.waktu)}). Tekan cari untuk memperbarui.`);
       }
     },
-    hancurkan() { if (peta) peta.remove(); peta = null; },
+    hancurkan() { berhentiAmati(); if (peta) peta.remove(); peta = null; },
   };
 }
 
 /* =====================================================================
    TAB 2 - PENGIRIMAN: penawaran saya dan pembaruan status
    ===================================================================== */
-function panelPengiriman({ bus }) {
+function panelPengiriman({ profile, bus }) {
+  const sopir = new Sopir(profile);
   const msg = el('p', { class: 'dash-msg', role: 'status' });
   const daftarKirim = el('div', { class: 'dash-list' });
   const daftarTawar = el('div', { class: 'dash-list' });
@@ -208,7 +244,7 @@ function panelPengiriman({ bus }) {
       berikut ? el('button', {
         type: 'button', class: 'btn btn--primary dash-btn-sm',
         onclick: async () => {
-          const r = await Transaksi.ubahStatus(g.id, berikut);
+          const r = await sopir.perbaruiStatus(g.id, berikut);
           setMsg(msg, r.ok ? `Status: ${Transaksi.LABEL_STATUS[berikut]}.` : r.message, r.ok ? 'ok' : 'error');
           if (r.ok) muat();
         },

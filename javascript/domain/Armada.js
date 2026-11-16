@@ -27,7 +27,7 @@ class Armada {
     tinggi_m,
     tinggiBakM,
     status_verifikasi,
-    statusVerifikasi = 'pending',
+    statusVerifikasi,
   } = {}) {
     this.id = id || null;
     this.idPengguna = idPengguna || id_pengguna || pengguna_id || null;
@@ -37,7 +37,9 @@ class Armada {
     this.panjangBakM = Number(panjangBakM ?? panjang_bak_m ?? panjang_m ?? 0);
     this.lebarBakM = Number(lebarBakM ?? lebar_bak_m ?? lebar_m ?? 0);
     this.tinggiBakM = Number(tinggiBakM ?? tinggi_bak_m ?? tinggi_m ?? 0);
-    this.statusVerifikasi = statusVerifikasi || status_verifikasi || 'pending';
+    // Nilai bawaan 'pending' diterapkan DI SINI, bukan pada parameter: default pada parameter membuat
+    // status_verifikasi dari baris database (snake_case) selalu tertimpa menjadi 'pending'.
+    this.statusVerifikasi = statusVerifikasi ?? status_verifikasi ?? 'pending';
 
     // Alias untuk kompatibilitas database Supabase lama
     this.panjang_m = this.panjangBakM;

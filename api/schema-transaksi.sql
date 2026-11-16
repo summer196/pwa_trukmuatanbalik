@@ -64,7 +64,10 @@ create function public.sopir_dari_customer(p uuid) returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.pengiriman where customer_id = p and sopir_id = auth.uid()); $$;
 
-/* ---------- Validasi penawaran di server (cermin dari SearchEngine.cekKompatibilitas) ---------- */
+/* ---------- Validasi penawaran di server ----------
+   Aturan sama dengan core/validator di klien (aturan-berat, aturan-dimensi, aturan-unit):
+   berat <= kapasitas; jenis unit sama persis (tanpa huruf besar/kecil dan spasi pinggir);
+   lantai muatan muat di bak (boleh diputar 90 derajat) dan tinggi <= tinggi bak. */
 create function public.validasi_penawaran() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare m public.muatan; a public.armada; lantai_ok boolean;

@@ -2,7 +2,7 @@
    CONTOH pemakaian Transaksi di UI. Tidak dimuat di halaman mana pun; salin polanya ke
    driver-dashboard.js dan customer-dashboard.js. Butuh: dashboard.js (el, badge, setMsg, rupiah), transaction.js */
 
-/* --- SOPIR: tombol Tawar pada kartu hasil pencarian (lihat kartuHasil di search-engine.contoh.js) --- */
+/* --- SOPIR: tombol Tawar pada kartu hasil pencarian (lihat kartuHasil di driver-dashboard.js) --- */
 async function contohTawar(m, msgEl) {
   const armada = m.kompatibilitas.armadaCocok[0];                    // armada terverifikasi yang cocok
   const input = prompt('Harga tawaran (Rp):', String(m.harga));

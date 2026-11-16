@@ -40,6 +40,18 @@ function badge(text, tone) { return el('span', { class: `dash-badge dash-badge--
 const rupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 const tanggal = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 const hariIni = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD (waktu lokal)
+const formatKm = (km) => `${new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(km)} km`;
+
+/* Lokasi GPS perangkat -> Promise<{ lat, lon }>. Penolakan izin ditangani pemanggil (lokasi manual sebagai cadangan, TC-17). */
+function ambilLokasiGPS() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) { reject(new Error('Perangkat tidak mendukung GPS.')); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      () => reject(new Error('Lokasi tidak bisa diakses. Izinkan akses lokasi atau ketik manual.')),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  });
+}
 const waktuLokal = (iso) => new Date(iso).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
 const kosong = (teks) => el('p', { class: 'dash-empty' }, teks);
 

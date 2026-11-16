@@ -1,6 +1,7 @@
 /* admin-verifikasi.js
    Modul verifikasi akun sopir dan armadanya khusus admin.
-   Bergantung pada: supabase-config.js, auth.js, dashboard.js */
+   Verifikasi lewat objek domain Admin (verifikasiAkun, verifikasiUnit).
+   Bergantung pada: supabase-config.js, auth.js, dashboard.js, domain/Pengguna.js, domain/Admin.js */
 
 const STATUS_VERIF_ADMIN = {
   pending: ['Menunggu', 'wait'],
@@ -8,7 +9,8 @@ const STATUS_VERIF_ADMIN = {
   rejected: ['Ditolak', 'no'],
 };
 
-function mountAdminVerifikasi(root) {
+function mountAdminVerifikasi(root, ctx = {}) {
+  const admin = new Admin((ctx && ctx.profile) || {});
   let filter = 'perlu';
   let sopir = [];
   let armada = [];
@@ -50,11 +52,15 @@ function mountAdminVerifikasi(root) {
   async function ubah(tabel, id, status, konfirmasi) {
     if (konfirmasi && !confirm(konfirmasi)) return;
     setMsg(msg, 'Menyimpan perubahan...', 'ok');
-    const { data, error } = await supabaseClient.from(tabel).update({ status_verifikasi: status }).eq('id', id).select('id');
-    if (error) { setMsg(msg, pesanDb(error)); return; }
-    if (!data || !data.length) { setMsg(msg, 'Tidak ada data yang berubah. Pastikan izin admin aktif.'); return; }
-    setMsg(msg, 'Status berhasil diperbarui.', 'ok');
+    try {
+      if (tabel === 'armada') await admin.verifikasiUnit(id, status);
+      else await admin.verifikasiAkun(id, status);
+    } catch (err) {
+      setMsg(msg, err && err.code ? pesanDb(err) : (err.message || 'Gagal memperbarui status.'));
+      return;
+    }
     await muat();
+    setMsg(msg, 'Status berhasil diperbarui.', 'ok');   // setelah muat(), karena muat() membersihkan pesan
   }
 
   function tombol(label, utama, fn) {

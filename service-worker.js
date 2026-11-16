@@ -9,7 +9,7 @@
    - Tile peta OpenStreetMap                   : "cache dulu", dibatasi jumlahnya.
    - Auth, realtime, pencarian lokasi, dan semua request non-GET : tidak disentuh (langsung ke jaringan). */
 
-const VERSI = 'v8';
+const VERSI = 'v9';
 const CACHE_SHELL = `muatanku-shell-${VERSI}`;
 const CACHE_ASET = `muatanku-aset-${VERSI}`;
 const CACHE_API = `muatanku-api-${VERSI}`;
@@ -25,10 +25,11 @@ const SHELL = [
   'html/dashboard.html', 'html/admin.html',
   'javascript/supabase-config.js', 'javascript/auth.js', 'javascript/pwa.js',
   'javascript/landing.js',
+  'javascript/core/haversine.js', 'javascript/core/validator/hasil-validasi.js', 'javascript/core/validator/aturan-base.js', 'javascript/core/validator/aturan-berat.js', 'javascript/core/validator/aturan-dimensi.js', 'javascript/core/validator/aturan-unit.js', 'javascript/core/validator/validator.js', 'javascript/core/repository/muatan-repo-base.js', 'javascript/core/repository/in-memory-muatan-repo.js', 'javascript/core/repository/cache-muatan-repo.js', 'javascript/core/repository/supabase-muatan-repo.js', 'javascript/core/pencarian-service.js', 'javascript/core/realtime-observer.js', 'javascript/domain/Pengguna.js', 'javascript/domain/Sopir.js', 'javascript/domain/Customer.js', 'javascript/domain/Admin.js', 'javascript/domain/Armada.js', 'javascript/domain/Muatan.js', 'javascript/domain/Penawaran.js', 'javascript/domain/Pengiriman.js', 'javascript/domain/LogStatus.js', 'javascript/domain/RencanaPulang.js',
   'javascript/dashboard.js', 'javascript/driver-dashboard.js', 'javascript/customer-dashboard.js',
   'javascript/admin-dashboard.js', 'javascript/admin-verifikasi.js', 'javascript/admin-pengiriman.js', 'javascript/admin-customer.js',
   'javascript/admin-posting-muatan.js', 'javascript/admin-cari-muatan.js',
-  'javascript/search-engine.js', 'javascript/transaction.js', 'javascript/map.js',
+  'javascript/transaction.js', 'javascript/map.js',
   'img/logo.svg', 'img/logo-icon.svg', 'img/logo-horizontal.svg', 'img/logo-horizontal-white.svg',
   'img/icons/icon-192.png', 'img/icons/icon-512.png',
 ];

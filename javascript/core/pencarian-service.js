@@ -70,6 +70,28 @@ class PencarianMuatanService {
   }
 
   /**
+   * Menandai kecocokan muatan dengan armada sopir memakai validator (Strategy) dan mengisi bisaTawar.
+   * Satu-satunya tempat penerapan validator pada hasil pencarian.
+   * @param {Object} item Hasil pencarian yang akan dilengkapi
+   * @param {Object} m Muatan asal
+   * @param {Array<Object>|Object|null} armadaData Daftar armada sopir, atau satu armada
+   */
+  _tandai(item, m, armadaData) {
+    if (!armadaData || !this.validator) return item;
+    if (Array.isArray(armadaData)) {
+      const val = this.validator.validasiUntukSopir(m, armadaData);
+      item.kompatibilitas = val;
+      item.bisaTawar = val.bolehTawar;
+    } else {
+      const val = this.validator.validasi(m, armadaData);
+      item.hasilValidasi = val;
+      item.kompatibilitas = { cocok: val.kompatibel, alasan: val.alasan };
+      item.bisaTawar = val.bolehTawar();
+    }
+    return item;
+  }
+
+  /**
    * FR-05: Cari muatan terdekat dari lokasi sopir dalam radius tertentu.
    * @param {Object|Array} lokasi Koordinat sopir { lat, lon }
    * @param {number} [radiusKm] Radius maksimal dalam km
@@ -87,7 +109,7 @@ class PencarianMuatanService {
       throw new RangeError('Radius harus berupa angka positif.');
     }
 
-    const semuaMuatan = (await this.repo.ambilSemuaAktif()) || [];
+    const semuaMuatan = (await this.repo.ambilSemuaAktif(titikSopir, radius)) || [];
     // TC-16: Repository kosong mengembalikan array kosong []
     if (!semuaMuatan.length) {
       return [];
@@ -102,18 +124,7 @@ class PencarianMuatanService {
       // TC-14: Radius 0 hanya memasukkan muatan dengan jarak tepat 0
       if (Number.isFinite(d) && d <= radius) {
         const item = { ...m, jarakKm: d, jarak: d };
-        if (armadaData && this.validator) {
-          if (Array.isArray(armadaData)) {
-            const val = this.validator.validasiUntukSopir(m, armadaData);
-            item.kompatibilitas = val;
-            item.bisaTawar = val.bolehTawar;
-          } else {
-            const val = this.validator.validasi(m, armadaData);
-            item.hasilValidasi = val;
-            item.kompatibilitas = { cocok: val.kompatibel, alasan: val.alasan };
-            item.bisaTawar = val.bolehTawar();
-          }
-        }
+        this._tandai(item, m, armadaData);
         hasil.push(item);
       }
     }
@@ -145,7 +156,7 @@ class PencarianMuatanService {
     const rAsal = Number(radiusAsalKm) || 50;
     const rTujuan = Number(radiusTujuanKm) || 100;
 
-    const semuaMuatan = (await this.repo.ambilSemuaAktif()) || [];
+    const semuaMuatan = (await this.repo.ambilSemuaAktif(dari, rAsal)) || [];
     if (!semuaMuatan.length) {
       return [];
     }
@@ -171,18 +182,7 @@ class PencarianMuatanService {
           skorKm: Math.round((dAsal + dTujuan) * 100) / 100,
         };
 
-        if (armadaData && this.validator) {
-          if (Array.isArray(armadaData)) {
-            const val = this.validator.validasiUntukSopir(m, armadaData);
-            item.kompatibilitas = val;
-            item.bisaTawar = val.bolehTawar;
-          } else {
-            const val = this.validator.validasi(m, armadaData);
-            item.hasilValidasi = val;
-            item.kompatibilitas = { cocok: val.kompatibel, alasan: val.alasan };
-            item.bisaTawar = val.bolehTawar();
-          }
-        }
+        this._tandai(item, m, armadaData);
         hasil.push(item);
       }
     }
